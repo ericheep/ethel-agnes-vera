@@ -17,11 +17,12 @@ in.listenAll();
 SinOsc sin[numSines];
 Gain gain[numSines * 2];
 
-// 0 => [0L, 1R],
-// 1 => [2L, 3R], etc.
+// 0 => [0L, 1R]
+// 1 => [2L, 3R]
+
 for (0 => int i; i < numSines; i++) {
-    sin[i] => gain[numSines * i + i] => dac.left;
-    sin[i] => gain[numSines * i + i] => dac.right;
+    sin[i] => gain[numSines * i + 0] => dac.left;
+    sin[i] => gain[numSines * i + 1] => dac.right;
 }
 
 for (0 => int i; i < numSines * 2; i++) {
