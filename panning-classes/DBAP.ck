@@ -8,7 +8,7 @@
 // "Distance-based amplitude panning (DBAP) extends the principle of equal
 // intensity panning from a pair of speakers to a loudspeaker array of any size,
 // with no a priori assumptions about their positions in space or relative to
-// each other.
+// each other."
 
 public class DBAP {
 
@@ -41,18 +41,18 @@ public class DBAP {
         }
     }
 
-    // ""When the virtual source is located at the exact position of one of the
+    // "When the virtual source is located at the exact position of one of the
     // loudspeakers, only that speaker will be emitting sound. This may cause unwanted
     // changes in spatial spread and coloration of a virtual source in a similar way
     // as observed for VBAP .. the larger r, the less the source will gravitate towards one
-    // speaker only"
+    // speaker only."
     public void spatialBlur(float r) {
         r => m_spatialBlur;
     }
 
-    // "a rolloff of R = 6 dB equals the inverse distance law for sound propagating
+    // "..a rolloff of R = 6 dB equals the inverse distance law for sound propagating
     // in a free field. For closed or semi-closed environments R will generally be lower,
-    // in the range of 3-5 dB, and depend on reflections and reverberation"
+    // in the range of 3-5 dB, and depend on reflections and reverberation."
     public void rolloff(float R) {
         R => m_rolloff;
     }
@@ -68,9 +68,6 @@ public class DBAP {
 
     // set coordinates, [0.0 - 1.0]
     public void coordinates(float l[][]) {
-        if (l.size() != m_numChannels) {
-            <<< "Warning: Number of coordinates does not match number of channels.", "" >>>;
-        }
         for (int i; i < l.size(); i++) {
             l[i] @=> speakerCoordinates[i];
         }
