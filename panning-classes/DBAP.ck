@@ -54,7 +54,7 @@ public class DBAP {
         computeSpeakerDistances(p);
         computeAmplitudeCoefficient() => float k;
 
-        for (int i; i < NUM_CHANNELS; i++) {
+        for (0 => int i; i < NUM_CHANNELS; i++) {
             k/Math.pow(speakerDistances[i], _rolloffCoefficient) => gain[i];
         }
 
@@ -67,7 +67,7 @@ public class DBAP {
 
     // distance formula with spatial blur offset
     private float[] computeSpeakerDistances(float p[]) {
-        for (int i; i < NUM_CHANNELS; i++) {
+        for (0 => int i; i < NUM_CHANNELS; i++) {
             Math.sqrt(Math.pow((speakerCoordinates[i][0] - p[0]), 2) +
                       Math.pow((speakerCoordinates[i][1] - p[1]), 2) +
                       Math.pow(_spatialBlur, 2)) => speakerDistances[i];
@@ -76,7 +76,7 @@ public class DBAP {
 
     private float computeAmplitudeCoefficient() {
         0.0 => float sum;
-        for (int i; i < NUM_CHANNELS; i++) {
+        for (0 => int i; i < NUM_CHANNELS; i++) {
             1.0/(Math.pow(speakerDistances[i], 2.0 * _rolloffCoefficient)) +=> sum;
         }
         return 1.0/Math.sqrt(sum);
@@ -87,13 +87,17 @@ DBAP dbap;
 
 // set channels
 dbap.numChannels(4);
-dbap.spatialBlur(0.001);
+dbap.spatialBlur(0.0001);
 
 // set speaker coordinates
 dbap.coordinates([[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]);
 
 float levels[];
-for (float i; i < 1.0; 0.05 +=> i) {
-    dbap.pan([i, 1.0]) @=> levels;
-    <<< levels[0], levels[1], levels[2], levels[3] >>>;
+float coordinate[2];
+
+for (0 => int i; i < 10; i++) {
+    Math.random2f(0.0, 1.0) => coordinate[0];
+    Math.random2f(0.0, 1.0) => coordinate[1];
+    dbap.pan(coordinate) @=> levels;
+    <<< "Coordinate: ", coordinate[0], coordinate[1], " -  Levels: ", levels[0], levels[1], levels[2], levels[3], "" >>>;
 }
