@@ -2,21 +2,14 @@
 // Eric Heep
 
 // Lissajous spatializer, sends OSC to control the four
-// speakers from the two receivers
-
-DBAP dbap;
-dbap.numChannels(4);
-dbap.spatialBlur(0.0001);
-dbap.rolloff(4.0);
-dbap.coordinates([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.1]]);
-
+// speakers via the two receivers
 OscOut out[2];
 
 true => int debug;
 
 // ["192.168.1.10", "192.168.1.20"] @=> string IP[];
 ["127.0.0.1", "127.0.0.2"] @=> string IP[];
-12345 => int OUT_PORT;
+12001 => int OUT_PORT;
 
 // 0 => [0L, 1R]
 // 1 => [2L, 3R]
@@ -44,12 +37,21 @@ fun void sendGain(int idx, float levels[]) {
     }
 }
 
+
 float inc;
 
+fun void sendTest(){
+    out[0].start("/l");
+    out[0].add((x.last() + 1.0)/2.0);
+    out[0].add((y.last() + 1.0)/2.0);
+    out[0].send();
+}
+
 while (true) {
-    (inc + 0.01) % pi => inc;
-    (Math.sin(inc) + 1.0) * 0.5 => float nSin;
-    sendGain(0, dbap.pan([0.5, nSin]));
-    <<< nSin >>>;
-    50::ms => now;
+    //(inc + 0.01) % pi => inc;
+    //(Math.sin(inc) + 1.0) * 0.5 => float nSin;
+    //sendGain(0, dbap.pan([0.5, nSin]));
+    //<<< nSin >>>;
+    sendTest();
+    1::ms => now;
 }
