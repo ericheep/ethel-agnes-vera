@@ -52,16 +52,16 @@ for (0 => int i; i < numSines; i++) {
     // used only for panning
     pan[i] => blackhole;
 
-    0.5 => sin[i].gain;
-    220.0 => sin[i].freq;
+    0.0 => sin[i].gain;
+    0.0 => sin[i].freq;
 
-    0.2 => gain[i].gain;
+    0.0 => gain[i].gain;
 
     1.0 => pan[i].gain;
     sin[i].freq() * multiplier => pan[i].freq;
 
-    1.0 => targetGain[i];
-    220 => targetFreq[i];
+    0.0 => targetGain[i];
+    0.0 => targetFreq[i];
 }
 
 fun void panning() {
