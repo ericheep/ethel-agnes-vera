@@ -43,8 +43,8 @@ dbap.coordinates([[ 0.0/23.0, 37.0/37.0],
 
 for (0 => int i; i < numSines; i++) {
     // setting up the sines
-    sin[i] => gain[i] => dac.left;
-    sin[i] => gain[i] => dac.right;
+    sin[i] => gain[i] => dac.chan(0);
+    sin[i] => gain[i] => dac.chan(1);
 
     // master gain
     dac.gain(1);
