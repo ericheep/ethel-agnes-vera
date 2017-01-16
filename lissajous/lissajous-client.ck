@@ -95,30 +95,23 @@ fun void pollPanningLevels() {
 spork ~ panning();
 
 fun void easing() {
-    float currentFreq;
-    float currentGain;
     while (true) {
         for (0 => int i; i < numSines; i++) {
             // sin frequencies
-            sin[i].freq() => currentFreq;
-            if (currentFreq < targetFreq[i] - freqInc) {
-                currentFreq + freqInc => sin[i].freq;
-                (currentFreq - freqInc) * multiplier => pan[i].freq;
+            if (sin[i].freq() < targetFreq[i] - freqInc) {
+                sin[i].freq() + freqInc => sin[i].freq;
+                (sin[i].freq() - freqInc) * multiplier => pan[i].freq;
             }
-            else if (currentFreq > targetFreq[i] + freqInc) {
-                currentFreq - freqInc => sin[i].freq;
-                (currentFreq - freqInc) * multiplier => pan[i].freq;
+            else if (sin[i].freq() > targetFreq[i] + freqInc) {
+                sin[i].freq() - freqInc => sin[i].freq;
+                (sin[i].freq()- freqInc) * multiplier => pan[i].freq;
             }
-
-            // level gains
-            gain[i].gain() => currentGain;
-            if (currentGain < targetGain[i] - gainInc) {
-                currentGain + gainInc => gain[i].gain;
-                <<< currentGain >>>;
+            // sin gains
+            if (gain[i].gain() < targetGain[i] - gainInc) {
+                gain[i].gain() + gainInc => gain[i].gain;
             }
-            else if (currentGain > targetGain[i] + gainInc) {
-                currentGain - gainInc => gain[i].gain;
-                <<< currentGain >>>;
+            else if (gain[i].gain() > targetGain[i] + gainInc) {
+                gain[i].gain() - gainInc => gain[i].gain;
             }
         }
 
