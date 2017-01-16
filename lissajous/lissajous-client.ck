@@ -137,6 +137,7 @@ fun void easing() {
 
 spork ~ easing();
 
+/*
 // osc receive
 while (true) {
     in => now;
@@ -181,3 +182,5 @@ while (true) {
         }
     }
 }
+*/
+day => now;
