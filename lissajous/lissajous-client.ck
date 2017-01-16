@@ -41,7 +41,8 @@ dbap.coordinates([[ 0.0/23.0, 37.0/37.0],
 
 // 0 => [0L, 1R]
 // 1 => [2L, 3R]
-
+SinOsc blah => dac;
+blah.gain(0.1);
 for (0 => int i; i < numSines; i++) {
     // setting up the sines
     sin[i] => gain[i] => testPan[i] => dac;
