@@ -78,7 +78,7 @@ fun void panning() {
             sin[0].gain(panLevels[2]);
             sin[1].gain(panLevels[3]);
         }
-        1::samp => now;
+        40::samp => now;
     }
 }
 
