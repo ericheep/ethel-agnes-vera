@@ -45,8 +45,8 @@ SinOsc blah => dac;
 blah.gain(0.1);
 for (0 => int i; i < numSines; i++) {
     // setting up the sines
-    sin[i] => gain[i] => testPan[i] => dac;
-    sin[i] => gain[i] => testPan[i] => dac;
+    //sin[i] => gain[i] => testPan[i] => dac;
+    //sin[i] => gain[i] => testPan[i] => dac;
 
     // master gain
     // dac.gain(1);
