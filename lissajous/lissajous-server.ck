@@ -24,14 +24,12 @@ true => int debug;
 0.0001 => float multiplier;
 
 fun void sendWhichPi() {
-        agnes.start("/pi");
-        agnes.add(0);
-        agnes.send();
-        10::ms => now;
-        ethel.start("/pi");
-        ethel.add(1);
-        ethel.send();
-        10::ms => now;
+    agnes.start("/pi");
+    agnes.add(0);
+    agnes.send();
+    ethel.start("/pi");
+    ethel.add(1);
+    ethel.send();
 }
 
 fun void sendFreq(int whichPi, int idx, float freq) {
@@ -47,6 +45,15 @@ fun void sendFreq(int whichPi, int idx, float freq) {
         ethel.add(freq);
         ethel.send();
     }
+}
+
+fun void sendPhaseReset() {
+    agnes.start("/p");
+    agnes.add(0);
+    agnes.send();
+    ethel.start("/p");
+    ethel.add(1);
+    ethel.send();
 }
 
 fun void sendGain(int whichPi, int idx, float gain) {
@@ -75,6 +82,7 @@ fun void sendMultiplier(float m) {
 }
 
 sendWhichPi();
+sendPhase();
 // sendFreq(0, freqOne);
 // sendGain(0, freqTwo);
 // sendFreq(1, gainOne);

@@ -174,5 +174,12 @@ while (true) {
                 <<< "/m", targetMultiplier, "" >>>;
             }
         }
+        if (msg.address == "/p") {
+            sin[0].phase(0);
+            sin[1].phase(0);
+            if (debug) {
+                <<< "/p", "phase reset", "" >>>;
+            }
+        }
     }
 }
