@@ -47,7 +47,7 @@ for (0 => int i; i < numSines; i++) {
     sin[i] => gain[i] => dac.chan(1);
 
     // master gain
-    dac.gain(0.2);
+    dac.gain(0.1);
 
     // used only for panning
     pan[i] => blackhole;
@@ -55,7 +55,7 @@ for (0 => int i; i < numSines; i++) {
     0.0 => sin[i].gain;
     220.0 => sin[i].freq;
 
-    0.3 => gain[i].gain;
+    0.0 => gain[i].gain;
 
     1.0 => pan[i].gain;
     sin[i].freq() * multiplier => pan[i].freq;
