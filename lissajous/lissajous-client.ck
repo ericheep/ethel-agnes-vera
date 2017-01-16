@@ -56,7 +56,7 @@ for (0 => int i; i < numSines; i++) {
     0.2 => sin[i].gain;
     220.0 => sin[i].freq;
 
-    0.0 => gain[i].gain;
+    0.3 => gain[i].gain;
 
     1.0 => pan[i].gain;
     sin[i].freq() * multiplier => pan[i].freq;
