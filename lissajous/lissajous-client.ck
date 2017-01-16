@@ -14,7 +14,7 @@ in.listenAll();
 
 1::ms => dur update;
 0.010 => float freqInc;
-0.00005 => float gainInc;
+0.000001 => float gainInc;
 0.0001 => float multiplier;
 multiplier => float targetMultiplier;
 0.0001 => float multiplierInc;
@@ -114,9 +114,11 @@ fun void easing() {
             gain[i].gain() => currentGain;
             if (currentGain < targetGain[i] - gainInc) {
                 currentGain + gainInc => gain[i].gain;
+                <<< currentGain >>>;
             }
             else if (currentGain > targetGain[i] + gainInc) {
                 currentGain - gainInc => gain[i].gain;
+                <<< currentGain >>>;
             }
         }
 

@@ -80,8 +80,8 @@ fun void sendMultiplier(float m) {
 //sendWhichPi();
 //sendPhaseReset();
 //sendFreq(0, 10000);
-sendGain(0, 0.0);
-sendMultiplier(0.025);
-// sendFreq(1, 9000);
-sendGain(1, 0.0);
+sendGain(0, 0.002);
+//sendMultiplier(0.025);
+//sendFreq(1, 9000);
+//sendGain(1, 0.000);
 100::ms => now;
