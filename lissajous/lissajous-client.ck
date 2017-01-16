@@ -53,7 +53,7 @@ for (0 => int i; i < numSines; i++) {
     // used only for panning
     pan[i] => blackhole;
 
-    0.0 => sin[i].gain;
+    0.1 => sin[i].gain;
     220.0 => sin[i].freq;
 
     0.0 => gain[i].gain;
@@ -96,7 +96,7 @@ fun void pollPanningLevels() {
 }
 
 // spork ~ pollPanningLevels();
-spork ~ panning();
+// spork ~ panning();
 
 fun void easing() {
     float currentFreq;
