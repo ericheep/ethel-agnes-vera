@@ -13,11 +13,11 @@ in.listenAll();
 0 => int whichPi;
 
 1::ms => dur update;
-0.005 => float freqInc;
+0.010 => float freqInc;
 0.00025 => float gainInc;
 0.0001 => float multiplier;
 multiplier => float targetMultiplier;
-0.01 => float multiplierInc;
+0.0001 => float multiplierInc;
 
 SinOsc sin[numSines];
 SinOsc pan[numSines];
@@ -47,13 +47,13 @@ for (0 => int i; i < numSines; i++) {
     sin[i] => gain[i] => dac.chan(1);
 
     // master gain
-    dac.gain(0.1);
+    dac.gain(0.05);
 
     // used only for panning
     pan[i] => blackhole;
 
     0.0 => sin[i].gain;
-    220.0 => sin[i].freq;
+    10000.0 => sin[i].freq;
 
     0.0 => gain[i].gain;
 
@@ -61,7 +61,7 @@ for (0 => int i; i < numSines; i++) {
     sin[i].freq() * multiplier => pan[i].freq;
 
     0.0 => targetGain[i];
-    220.0 => targetFreq[i];
+    10000.0 => targetFreq[i];
 }
 
 fun void panning() {
