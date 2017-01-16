@@ -9,13 +9,27 @@ true => int debug;
 
 // ["192.168.1.10", "192.168.1.20"] @=> string IP[];
 ["127.0.0.1", "127.0.0.2"] @=> string IP[];
-12001 => int OUT_PORT;
+12345 => int OUT_PORT;
 
 // 0 => [0L, 1R]
 // 1 => [2L, 3R]
 
+220.0 => float freqOne;
+220.0 => float freqTwo;
+0.1 => float gainOne;
+0.1 => float gainTwo;
+0.0001 => float multiplier;
+
 for (0 => int i; i < 2; i++) {
     out[i].dest(IP[i], OUT_PORT);
+}
+
+fun void sendWhichPi() {
+    for (0 => int i; i < 2; i++) {
+        out[i].start("/pi");
+        out[i].add(i);
+        out[i].send();
+    }
 }
 
 fun void sendFreq(int idx, float freq) {
@@ -27,31 +41,26 @@ fun void sendFreq(int idx, float freq) {
     }
 }
 
-fun void sendGain(int idx, float levels[]) {
+fun void sendGain(int idx, float gain) {
     for (0 => int i; i < 2; i++) {
         out[i].start("/g");
         out[i].add(idx);
-        out[i].add(Std.clampf(levels[i * 2 + 0], 0.0, 1.0));
-        out[i].add(Std.clampf(levels[i * 2 + 1], 0.0, 1.0));
+        out[i].add(gain);
         out[i].send();
     }
 }
 
-
-float inc;
-
-fun void sendTest(){
-    out[0].start("/l");
-    out[0].add((x.last() + 1.0)/2.0);
-    out[0].add((y.last() + 1.0)/2.0);
-    out[0].send();
+fun void sendMultiplier(float m) {
+    for (0 => int i; i < 2; i++) {
+        out[i].start("/m");
+        out[i].add(m);
+        out[i].send();
+    }
 }
 
-while (true) {
-    //(inc + 0.01) % pi => inc;
-    //(Math.sin(inc) + 1.0) * 0.5 => float nSin;
-    //sendGain(0, dbap.pan([0.5, nSin]));
-    //<<< nSin >>>;
-    sendTest();
-    1::ms => now;
-}
+sendWhichPi();
+sendFreq(0, freqOne);
+sendGain(0, freqTwo);
+sendFreq(1, gainOne);
+sendGain(1, gainTwo);
+sendMultiplier(multiplier);

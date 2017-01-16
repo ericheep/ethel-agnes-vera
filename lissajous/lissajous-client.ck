@@ -15,7 +15,9 @@ in.listenAll();
 1::ms => dur update;
 0.005 => float freqInc;
 0.00025 => float gainInc;
-0.1 => float multiplier;
+0.001 => float multiplier;
+multiplier => float targetMultiplier;
+0.01 => float multiplierInc;
 
 SinOsc sin[numSines];
 SinOsc pan[numSines];
@@ -43,6 +45,11 @@ for (0 => int i; i < numSines; i++) {
     // setting up the sines
     sin[i] => gain[i] => dac.left;
     sin[i] => gain[i] => dac.right;
+
+    // master gain
+    dac.gain(0.2);
+
+    // used only for panning
     pan[i] => blackhole;
 
     0.5 => sin[i].gain;
@@ -71,7 +78,7 @@ fun void panning() {
             sin[0].gain(panLevels[2]);
             sin[1].gain(panLevels[3]);
         }
-        1::samp => now;
+        4::samp => now;
     }
 }
 
@@ -110,6 +117,13 @@ fun void easing() {
             else if (currentGain > targetGain[i] + gainInc) {
                 currentGain - gainInc => gain[i].gain;
             }
+        }
+
+        if (multiplier < targetMultiplier - multiplierInc) {
+            multiplier + multiplierInc => multiplier;
+        }
+        else if (multiplier > targetMultiplier + multiplierInc) {
+            multiplier - multiplierInc => multiplier;
         }
         update => now;
     }
@@ -156,7 +170,7 @@ while (true) {
             msg.getFloat(0) => multiplier;
 
             if (debug) {
-                <<< "/m", multiplier, "" >>>;
+                <<< "/m", targetMultiplier, "" >>>;
             }
         }
     }
