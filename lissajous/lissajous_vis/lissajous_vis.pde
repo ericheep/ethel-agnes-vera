@@ -6,7 +6,6 @@ float y = 0.5;
 import oscP5.*;
 import netP5.*;
 OscP5 oscP5;
-NetAddress myRemoteLocation;
 
 void oscEvent(OscMessage msg) {
   if (msg.checkAddrPattern("/l") == true) {
@@ -20,11 +19,11 @@ void setup() {
   ellipseMode(CENTER);
   frameRate(60);
   oscP5 = new OscP5(this, 12001);
-  myRemoteLocation = new NetAddress("127, 0.0.1", 12000);
 }
 
 void draw() {
-  background(0, 0, 0, 200);
+  fill(0, 0, 0, 15);
+  rect(0, 0, width, height);
   fill(30, 255, 175);
   ellipse(width * x, height * y, 4, 4); 
 }

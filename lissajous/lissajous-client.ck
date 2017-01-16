@@ -47,21 +47,21 @@ for (0 => int i; i < numSines; i++) {
     sin[i] => gain[i] => dac.right;
 
     // master gain
-    dac.gain(0.2);
+    dac.gain(1);
 
     // used only for panning
     pan[i] => blackhole;
 
     0.0 => sin[i].gain;
-    0.0 => sin[i].freq;
+    220.0 => sin[i].freq;
 
     0.0 => gain[i].gain;
 
     1.0 => pan[i].gain;
     sin[i].freq() * multiplier => pan[i].freq;
 
-    0.0 => targetGain[i];
-    0.0 => targetFreq[i];
+    0.3 => targetGain[i];
+    220.0 => targetFreq[i];
 }
 
 fun void panning() {
@@ -91,6 +91,7 @@ fun void pollPanningLevels() {
     }
 }
 
+// spork ~ pollPanningLevels();
 spork ~ panning();
 
 fun void easing() {
