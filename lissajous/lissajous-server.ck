@@ -83,5 +83,5 @@ sendFreq(0, 220);
 sendGain(0, 0.2);
 // sendFreq(1, gainOne);
 // sendGain(1, gainTwo);
-// sendMultiplier(multiplier);
+sendMultiplier(0.0001);
 100::ms => now;
