@@ -79,9 +79,9 @@ fun void sendMultiplier(float m) {
 
 //sendWhichPi();
 //sendPhaseReset();
-// sendFreq(0, 800);
-// sendGain(0, 0.1);
-// sendMultiplier(0.001);
-// sendFreq(1, 660);
-// sendGain(1, 0.1);
+//sendFreq(0, 10000);
+sendGain(0, 0.0);
+sendMultiplier(0.025);
+// sendFreq(1, 9000);
+sendGain(1, 0.0);
 100::ms => now;

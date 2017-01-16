@@ -14,7 +14,7 @@ in.listenAll();
 
 1::ms => dur update;
 0.010 => float freqInc;
-0.00025 => float gainInc;
+0.00005 => float gainInc;
 0.0001 => float multiplier;
 multiplier => float targetMultiplier;
 0.0001 => float multiplierInc;
