@@ -21,7 +21,8 @@ multiplier => float targetMultiplier;
 
 SinOsc sin[numSines];
 SinOsc pan[numSines];
-Gain gain [numSines];
+Gain gain[numSines];
+Pan2 testPan[numSines];
 DBAP dbap;
 float targetFreq[numSines];
 float targetGain[numSines];
@@ -43,11 +44,11 @@ dbap.coordinates([[ 0.0/23.0, 37.0/37.0],
 
 for (0 => int i; i < numSines; i++) {
     // setting up the sines
-    sin[i] => gain[i] => dac.chan(0);
-    sin[i] => gain[i] => dac.chan(1);
+    sin[i] => gain[i] => testPan[i] => dac;
+    sin[i] => gain[i] => testPan[i] => dac;
 
     // master gain
-    dac.gain(1);
+    // dac.gain(1);
 
     // used only for panning
     pan[i] => blackhole;
@@ -63,6 +64,9 @@ for (0 => int i; i < numSines; i++) {
     0.3 => targetGain[i];
     220.0 => targetFreq[i];
 }
+
+testPan[0].pan(-1.0);
+testPan[1].pan(1.0);
 
 fun void panning() {
     while (true) {
