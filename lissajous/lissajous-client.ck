@@ -53,7 +53,7 @@ for (0 => int i; i < numSines; i++) {
     pan[i] => blackhole;
 
     0.0 => sin[i].gain;
-    10000.0 => sin[i].freq;
+    5000.0 => sin[i].freq;
 
     0.0 => gain[i].gain;
 
@@ -61,7 +61,7 @@ for (0 => int i; i < numSines; i++) {
     sin[i].freq() * multiplier => pan[i].freq;
 
     0.0 => targetGain[i];
-    10000.0 => targetFreq[i];
+    5000.0 => targetFreq[i];
 }
 
 fun void panning() {

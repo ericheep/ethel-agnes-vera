@@ -37,12 +37,12 @@ fun void sendWhichPi() {
 
 fun void sendFreq(int idx, float freq) {
     agnes.start("/f");
-    agnes.add(0);
+    agnes.add(idx);
     agnes.add(freq);
     agnes.send();
 
     ethel.start("/f");
-    ethel.add(1);
+    ethel.add(idx);
     ethel.add(freq);
     ethel.send();
 }
@@ -59,12 +59,12 @@ fun void sendPhaseReset() {
 
 fun void sendGain(int idx, float gain) {
     agnes.start("/g");
-    agnes.add(0);
+    agnes.add(idx);
     agnes.add(gain);
     agnes.send();
 
     ethel.start("/g");
-    ethel.add(1);
+    ethel.add(idx);
     ethel.add(gain);
     ethel.send();
 }
@@ -79,11 +79,11 @@ fun void sendMultiplier(float m) {
     ethel.send();
 }
 
-//sendWhichPi();
-//sendPhaseReset();
-sendFreq(0, 10000);
-sendGain(0, 0.102);
-sendMultiplier(0.00001);
-sendFreq(1, 8000);
-sendGain(1, 0.102);
+sendWhichPi();
+sendPhaseReset();
+//sendFreq(0, 300);
+sendGain(0, 0.5);
+sendMultiplier(0.001);
+//sendFreq(1, 1000);
+sendGain(1, 0.5);
 100::ms => now;
