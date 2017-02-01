@@ -8,9 +8,7 @@ OscOut ethel;
 
 12345 => int OUT_PORT;
 agnes.dest("192.168.1.15", OUT_PORT);
-agnes.dest("127.0.0.1", OUT_PORT);
 ethel.dest("192.168.1.20", OUT_PORT);
-ethel.dest("127.0.0.1", OUT_PORT);
 
 10::ms => now;
 
@@ -79,11 +77,12 @@ fun void sendMultiplier(float m) {
     ethel.send();
 }
 
-sendWhichPi();
-sendPhaseReset();
-//sendFreq(0, 300);
-sendGain(0, 0.5);
+//sendWhichPi();
+//sendPhaseReset();
+//sendFreq(0, 20000);
+sendGain(0, 0.00001);
 sendMultiplier(0.001);
-//sendFreq(1, 1000);
-sendGain(1, 0.5);
-100::ms => now;
+//sendFreq(1, 10000);
+sendGain(1, 0.000j1);
+
+10::ms => now;

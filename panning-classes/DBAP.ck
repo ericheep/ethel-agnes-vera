@@ -134,3 +134,4 @@ for (0 => float i; i < 1.0; 0.1 +=> i) {
 
     <<< "Coordinate:", coordinate[0], coordinate[1], " -  Levels:", levels[0], levels[1], levels[2], levels[3], " -  Inverse Square Sum:", sum, "" >>>;
 }
+*/
