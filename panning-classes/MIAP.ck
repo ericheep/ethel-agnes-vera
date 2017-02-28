@@ -42,7 +42,8 @@ public class MIAP {
         nodes << node;
     }
 
-    // checks if point is in a triangle
+    // checks if point is in a triangle, will set private eventually
+    // I'm guessing we have to scan through trisets next, we'll see
     fun int pointInPoly(float P[], float A[], float B[], float C[]) {
         // compute vectors
         computeVector(C, A) @=> float v0[];
@@ -50,11 +51,11 @@ public class MIAP {
         computeVector(P, A) @=> float v2[];
 
         // compute dot products
-        dot(v0, v0, 2) => float dot00;
-        dot(v0, v1, 2) => float dot01;
-        dot(v0, v2, 2) => float dot02;
-        dot(v1, v1, 2) => float dot11;
-        dot(v1, v2, 2) => float dot12;
+        dotProduct(v0, v0, 2) => float dot00;
+        dotProduct(v0, v1, 2) => float dot01;
+        dotProduct(v0, v2, 2) => float dot02;
+        dotProduct(v1, v1, 2) => float dot11;
+        dotProduct(v1, v2, 2) => float dot12;
 
         // compute barycentric coordinates
         1.0/(dot00 * dot11 - dot01 * dot01) => float invDenom;
@@ -65,12 +66,11 @@ public class MIAP {
         return (u >= 0) && (v >= 0) && ((u + v) < 1);
     }
 
-    fun float[] computeVector(float R[], float S[]) {
+    private fun float[] computeVector(float R[], float S[]) {
         return [R[0] - S[0], R[1] - S[1]];
     }
 
-    // utility
-    fun float dot(float v[], float u[], int n) {
+    private fun float dotProduct(float v[], float u[], int n) {
         0.0 => float result;
 
         for (0 => int i; i < n; i++) {
