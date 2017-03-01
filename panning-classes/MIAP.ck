@@ -27,6 +27,8 @@ public class MIAP {
 
     Node nodes[0];
     int trisets[0];
+    0 => int numNodes;
+    0 => int numTrisets;
 
     public void addNode(float coordinate[], int trisets[]) {
         Node node;
@@ -34,9 +36,10 @@ public class MIAP {
         node.setTrisets(trisets);
         nodes << node;
         updateTrisets();
+        numNodes++;
     }
 
-    public void updateTrisets() {
+    private void updateTrisets() {
         int allTrisets[0];
         int uniqueTrisets[0];
 
@@ -55,27 +58,39 @@ public class MIAP {
         }
 
         uniqueTrisets @=> trisets;
+        uniqueTrisets.size() => numTrisets;
     }
 
-    public void setPosition(float position[]) {
-        0 => int whichTriset;
-        float trisetCoordinates[3][2];
-        0 => int trisetIdx;
+    public void setPosition(float pos[]) {
+        0 => int trisetFound;
 
-        for (0 => int i; i < nodes.size(); i++) {
-            if (nodeInTriset(nodes[i], whichTriset)) {
-                nodes[i].coordinate @=> trisetCoordinates[i];
-                trisetIdx++;
+        for (0 => int i; i < numTrisets; i++) {
+            if (trisetFound) {
+                break;
+            }
+
+            float trisetCoord[3][2];
+            0 => int trisetIdx;
+
+            for (0 => int j; j < nodes.size(); j++) {
+
+                if (nodeInTriset(nodes[j], trisets[i])) {
+                    nodes[j].coordinate @=> trisetCoord[trisetIdx];
+                    trisetIdx++;
+                }
+                if (trisetIdx >= 3) {
+                    if (pointInTriset(pos, trisetCoord[0], trisetCoord[1], trisetCoord[2])) {
+                        1 => trisetFound;
+                    }
+                    break;
+                }
             }
         }
-        <<< trisetCoordinates[0][1], trisetCoordinates[0][0] >>>;
     }
 
     public int nodeInTriset(Node node, int triset) {
         for (0 => int i; i < node.trisets.size(); i++) {
-            if (node.trisets[i] == triset) {
-                return 1;
-            }
+            if (node.trisets[i] == triset)  return 1;
         }
         return 0;
     }
@@ -124,7 +139,7 @@ m.addNode([0.0, 1.0], [0, 1]);
 m.addNode([1.0, 0.0], [0, 1]);
 m.addNode([1.0, 1.0], [1]);
 
-m.setPosition([0.1, 0.1]);
+m.setPosition([0.75, 0.75]);
 
 // <<< m.pointInPoly([0.1, 1.1], [0.0, 0.0], [0.0, 1.0], [1.0, 0.0]) >>>;
 
