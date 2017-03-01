@@ -4,6 +4,7 @@
 // white paper locked behind AES paywall
 
 public class MIAP {
+
     // our node objects
     class Node {
         float coordinate[2];
@@ -40,23 +41,36 @@ public class MIAP {
                 break;
             }
 
-            float trisetCoord[3][2];
-            0 => int trisetIdx;
+            int trisetIdx[0];
 
             for (0 => int j; j < nodes.size(); j++) {
 
                 if (nodeInTriset(nodes[j], trisets[i])) {
-                    nodes[j].coordinate @=> trisetCoord[trisetIdx];
-                    trisetIdx++;
+                    trisetIdx << j;
                 }
-                if (trisetIdx >= 3) {
-                    if (pointInTriset(pos, trisetCoord[0], trisetCoord[1], trisetCoord[2])) {
+                if (trisetIdx.size() == 3) {
+                    if (pointInTriset(pos, nodes[trisetIdx[0]].coordinate,
+                                           nodes[trisetIdx[1]].coordinate,
+                                           nodes[trisetIdx[2]].coordinate)) {
+
+                        // if the point is inside triset, we do some math
+                        areaOfTriset(pos, nodes[trisetIdx[0]],
+                                          nodes[trisetIdx[1]],
+                                          nodes[trisetIdx[2]]);
+
+                        // breaks the loop, only one triset should be found
                         1 => trisetFound;
                     }
                     break;
                 }
             }
         }
+    }
+
+    private void areaOfTriset(float pos[], Node n1, Node n2, Node n3) {
+        <<< n1.coordinate[0], n1.coordinate[1] >>>;
+        <<< n2.coordinate[0], n2.coordinate[1] >>>;
+        <<< n3.coordinate[0], n3.coordinate[1] >>>;
     }
 
     private void updateTrisets() {
@@ -130,8 +144,9 @@ MIAP m;
 
 m.addNode([0.0, 0.0], [0]);
 m.addNode([0.0, 1.0], [0, 1]);
-m.addNode([1.0, 0.0], [0, 1]);
-m.addNode([1.0, 1.0], [1]);
+m.addNode([1.0, 0.0], [0, 1, 2]);
+m.addNode([1.0, 1.0], [1, 2]);
+m.addNode([2.0, 1.0], [1, 2]);
 
-m.setPosition([0.75, 0.75]);
+m.setPosition([1.75, 0.9]);
 
