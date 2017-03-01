@@ -7,8 +7,11 @@ public class MIAP {
 
     // our node objects
     class Node {
+        string type;
+
         float coordinate[2];
         float gain;
+
         int trisets[0];
     }
 
@@ -24,7 +27,7 @@ public class MIAP {
 
     init();
 
-    public void addNode(float coordinate[], int trisets[]) {
+    public void addNode(float coordinate[], int trisets[], string type) {
         Node node;
         coordinate @=> node.coordinate;
         trisets @=> node.trisets;
@@ -142,11 +145,11 @@ public class MIAP {
 
 MIAP m;
 
-m.addNode([0.0, 0.0], [0]);
-m.addNode([0.0, 1.0], [0, 1]);
-m.addNode([1.0, 0.0], [0, 1, 2]);
-m.addNode([1.0, 1.0], [1, 2]);
-m.addNode([2.0, 1.0], [1, 2]);
+m.addNode([0.0, 0.0], "silent", [0]);
+m.addNode([0.0, 1.0], "speaker", [0, 1]);
+m.addNode([1.0, 0.0], "speaker", [0, 1, 2]);
+m.addNode([1.0, 1.0], "speaker", [1, 2]);
+m.addNode([2.0, 1.0], "silent", [1, 2]);
 
 m.setPosition([1.75, 0.9]);
 
