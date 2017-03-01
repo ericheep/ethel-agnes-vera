@@ -128,6 +128,7 @@ public class MIAP {
         return 0;
     }
 
+    // http://blackpawn.com/texts/pointinpoly/
     private int pointInTriset(float P[], float A[], float B[], float C[]) {
         // compute vectors
         computeVector(C, A) @=> float v0[];
@@ -165,13 +166,50 @@ public class MIAP {
     }
 }
 
+/*
 MIAP m;
 
-m.addNode([0.0, 0.0], [0]);
-m.addNode([0.0, 1.0], [0, 1]);
-m.addNode([1.0, 0.0], [0, 1, 2]);
-m.addNode([1.0, 1.0], [1, 2]);
-m.addNode([2.0, 1.0], [1, 2]);
+Math.pow(0.75, 2) => float verticalHeight;
+(4.5 - (verticalHeight * 3)) * .5 => float verticalOffset;
 
-m.setPosition([0.0, 0.0]);
+/*
 
+    For six unit triangles with a perimeter of silent nodes.
+
+                    *---*---*---*
+                   / \ / \ / \ / \
+                  *   *   *   *   *
+                   \ / \ / \ / \ / \
+                    *   *   *   *   *
+                     \ / \ / \ / \ /
+                      *---*---*---*
+*/
+
+/*
+// top row, all silent
+m.addNode([0.5, verticalOffset], [0, 1]);
+m.addNode([1.5, verticalOffset], [1, 2, 3]);
+m.addNode([2.5, verticalOffset], [3, 4, 5]);
+m.addNode([3.5, verticalOffset], [5, 6]);
+
+// first and last silent
+m.addNode([0.0, verticalOffset + verticalHeight], [0, 7]);
+m.addNode([1.0, verticalOffset + verticalHeight], [0, 1, 2, 7, 8, 9]);
+m.addNode([2.0, verticalOffset + verticalHeight], [2, 3, 4, 9, 10, 11]);
+m.addNode([3.0, verticalOffset + verticalHeight], [4, 5, 6, 11, 12, 13]);
+m.addNode([4.0, verticalOffset + verticalHeight], [6, 13, 14]);
+
+// first and last silent
+m.addNode([0.5, verticalOffset + verticalHeight * 2], [7, 8, 15]);
+m.addNode([1.5, verticalOffset + verticalHeight * 2], [8, 9, 10, 15, 16, 17]);
+m.addNode([2.5, verticalOffset + verticalHeight * 2], [10, 11, 12, 17, 18, 19]);
+m.addNode([3.5, verticalOffset + verticalHeight * 2], [12, 13, 14, 19, 20, 21]);
+m.addNode([4.5, verticalOffset + verticalHeight * 2], [14, 21]);
+
+// bottom row, silent
+m.addNode([1.0, verticalOffset + verticalHeight * 3], [15, 16]);
+m.addNode([2.0, verticalOffset + verticalHeight * 3], [16, 17, 18]);
+m.addNode([3.0, verticalOffset + verticalHeight * 3], [18, 19, 20]);
+m.addNode([4.0, verticalOffset + verticalHeight * 3], [20, 21]);
+
+*/
