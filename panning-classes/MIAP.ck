@@ -7,8 +7,6 @@ public class MIAP {
 
     // our node objects
     class Node {
-        string type;
-
         float coordinate[2];
         float gain;
 
@@ -27,7 +25,7 @@ public class MIAP {
 
     init();
 
-    public void addNode(float coordinate[], int trisets[], string type) {
+    public void addNode(float coordinate[], int trisets[]) {
         Node node;
         coordinate @=> node.coordinate;
         trisets @=> node.trisets;
@@ -57,9 +55,9 @@ public class MIAP {
                                            nodes[trisetIdx[2]].coordinate)) {
 
                         // if the point is inside triset, we do some math
-                        areaOfTriset(pos, nodes[trisetIdx[0]],
-                                          nodes[trisetIdx[1]],
-                                          nodes[trisetIdx[2]]);
+                        areaOfTriangles(pos, nodes[trisetIdx[0]],
+                                             nodes[trisetIdx[1]],
+                                             nodes[trisetIdx[2]]);
 
                         // breaks the loop, only one triset should be found
                         1 => trisetFound;
@@ -70,10 +68,34 @@ public class MIAP {
         }
     }
 
-    private void areaOfTriset(float pos[], Node n1, Node n2, Node n3) {
-        <<< n1.coordinate[0], n1.coordinate[1] >>>;
-        <<< n2.coordinate[0], n2.coordinate[1] >>>;
-        <<< n3.coordinate[0], n3.coordinate[1] >>>;
+    private void areaOfTriangles(float pos[], Node n1, Node n2, Node n3) {
+        distance(n1.coordinate, n2.coordinate) => float ab;
+        distance(n2.coordinate, n3.coordinate) => float bc;
+        distance(n1.coordinate, n3.coordinate) => float ac;
+
+        heronArea(ab, bc, ac) => float totalArea;
+        1.0/totalArea => float totalAreaScalar;
+
+        distance(n1.coordinate, pos) => float ap;
+        distance(n2.coordinate, pos) => float bp;
+        distance(n3.coordinate, pos) => float cp;
+
+        heronArea(ab, bp, ap) => float n3Area;
+        heronArea(ac, ap, cp) => float n2Area;
+        totalArea - n3Area - n2Area => float n1Area;
+
+        Math.sqrt(n1Area * totalAreaScalar) => n1.gain;
+        Math.sqrt(n2Area * totalAreaScalar) => n2.gain;
+        Math.sqrt(n3Area * totalAreaScalar) => n3.gain;
+    }
+
+    private float heronArea(float A, float B, float C) {
+        (A + B + C) * 0.5 => float S;
+        return Math.sqrt(S * (S - A) * (S - B) * (S - C));
+    }
+
+    private float distance(float A[], float B[]) {
+        return Math.sqrt(Math.pow((B[0] - A[0]), 2) + Math.pow((B[1] - A[1]), 2));
     }
 
     private void updateTrisets() {
@@ -145,11 +167,11 @@ public class MIAP {
 
 MIAP m;
 
-m.addNode([0.0, 0.0], "silent", [0]);
-m.addNode([0.0, 1.0], "speaker", [0, 1]);
-m.addNode([1.0, 0.0], "speaker", [0, 1, 2]);
-m.addNode([1.0, 1.0], "speaker", [1, 2]);
-m.addNode([2.0, 1.0], "silent", [1, 2]);
+m.addNode([0.0, 0.0], [0]);
+m.addNode([0.0, 1.0], [0, 1]);
+m.addNode([1.0, 0.0], [0, 1, 2]);
+m.addNode([1.0, 1.0], [1, 2]);
+m.addNode([2.0, 1.0], [1, 2]);
 
-m.setPosition([1.75, 0.9]);
+m.setPosition([0.0, 0.0]);
 
