@@ -1,64 +1,35 @@
 // Eric Heep
 
 // Manifold-Something Amplitude Panning
-// white paper locked behind a paywall
+// white paper locked behind AES paywall
 
 public class MIAP {
-
+    // our node objects
     class Node {
-
         float coordinate[2];
         float gain;
-
         int trisets[0];
-
-        fun void setGain(float g) {
-            g => gain;
-        }
-
-        fun void setCoordinate(float c[]) {
-            c @=> coordinate;
-        }
-
-        fun void setTrisets(int t[]) {
-            t @=> trisets;
-        }
     }
 
     Node nodes[0];
     int trisets[0];
-    0 => int numNodes;
-    0 => int numTrisets;
+    int numNodes;
+    int numTrisets;
+
+    private void init() {
+        0 => numNodes;
+        0 => numTrisets;
+    }
+
+    init();
 
     public void addNode(float coordinate[], int trisets[]) {
         Node node;
-        node.setCoordinate(coordinate);
-        node.setTrisets(trisets);
+        coordinate @=> node.coordinate;
+        trisets @=> node.trisets;
         nodes << node;
         updateTrisets();
         numNodes++;
-    }
-
-    private void updateTrisets() {
-        int allTrisets[0];
-        int uniqueTrisets[0];
-
-        for (0 => int i; i < nodes.size(); i++) {
-            for (0 => int j; j < nodes[i].trisets.size(); j++) {
-                allTrisets << nodes[i].trisets[j];
-            }
-        }
-
-        for (0 => int i; i < allTrisets.size(); i++) {
-            0 => int j;
-            for (0 => j; j < i; j++) {
-                if (allTrisets[i] == allTrisets[j]) break;
-            }
-            if (i == j) uniqueTrisets << allTrisets[i];
-        }
-
-        uniqueTrisets @=> trisets;
-        uniqueTrisets.size() => numTrisets;
     }
 
     public void setPosition(float pos[]) {
@@ -88,7 +59,30 @@ public class MIAP {
         }
     }
 
-    public int nodeInTriset(Node node, int triset) {
+    private void updateTrisets() {
+        int allTrisets[0];
+        int uniqueTrisets[0];
+
+        for (0 => int i; i < nodes.size(); i++) {
+            for (0 => int j; j < nodes[i].trisets.size(); j++) {
+                allTrisets << nodes[i].trisets[j];
+            }
+        }
+
+        for (0 => int i; i < allTrisets.size(); i++) {
+            0 => int j;
+            for (0 => j; j < i; j++) {
+                if (allTrisets[i] == allTrisets[j]) break;
+            }
+            if (i == j) uniqueTrisets << allTrisets[i];
+        }
+
+        uniqueTrisets @=> trisets;
+        uniqueTrisets.size() => numTrisets;
+    }
+
+
+    private int nodeInTriset(Node node, int triset) {
         for (0 => int i; i < node.trisets.size(); i++) {
             if (node.trisets[i] == triset)  return 1;
         }
@@ -140,6 +134,4 @@ m.addNode([1.0, 0.0], [0, 1]);
 m.addNode([1.0, 1.0], [1]);
 
 m.setPosition([0.75, 0.75]);
-
-// <<< m.pointInPoly([0.1, 1.1], [0.0, 0.0], [0.0, 1.0], [1.0, 0.0]) >>>;
 
