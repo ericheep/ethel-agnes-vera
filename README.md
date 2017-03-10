@@ -12,7 +12,7 @@ The ultimate goal for this piece would be to have it in a large enough space to 
 
 ![miap](miap-image.png)
 
-An example of a point moving from the lower left corner of a five by three grid of nodes. The circles represent the nodes and their radius represents their gain value.
+An example of a point moving from the lower left corner of a five by seven grid of nodes. The circles represent the nodes and their radius represents their gain value.
 
 ![speaker-enclosure](speaker-enclosure-image.jpg)
 
