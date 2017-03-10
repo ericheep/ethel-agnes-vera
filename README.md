@@ -1,14 +1,22 @@
 # ethel-agnes-vera
 
-Spatialized composition for three Raspberry Pis, each connect to two speakers.
+This is a spatialized live performance that involves three Raspberry Pis and six speakers. Each Raspbery Pi is connected to two speakers, and only require a wireless router and power to receive control parameters from a central computer. This allows for easy movement of the speakers throughout the performance.
 
-Spatialization occurs in the form of Manifold Interface Amplitude Panning (MIAP), which supposes gain structures based on a collection of trianges and a sound that traverses over a plane. The composition relies on spatial changes over time as it's primary element, and has an evolving speaker placement as the Nodes of the MIAP instance change.
+The speakers are arranged according to a map of connecting equilateral triangles. Manifold Interface Amplitude Panning (MIAP) can use this grid of triangles to create gain calculations based on a point in the grid and it's relation to the points of the triangle it is in.
 
-The sound source is fairly arbitrary, as long as it is complex enough to perceive in an XY space.
+The performer in this piece moves the speakers to various nodes in accordance to the changing spatial parameters, as the piece gradually shifts between nodes, human interaction is required to keep the spatial intent, but also allows unpredictable flaws to emanate from the system.
+
+The sound source used is a computer voice repeating three names that correspond to the titles of the Raspbery Pis themselves, in this case `ethel`, `agnes`, and `vera`.
 
 
 ![miap](miap-image.png)
 
+An example of a point moving from the lower left corner of a five by three grid of nodes. The circles represent the nodes and their radius represents their gain value.
+
 ![speaker-enclosure](speaker-enclosure-image.jpg)
 
+A custom set of speakers are used, with 3d printed speaker-enclosures.
+
 ![node-grid](node-grid.jpg)
+
+A tenative setup for the piece.
