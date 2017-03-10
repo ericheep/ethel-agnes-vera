@@ -16,26 +16,41 @@ public class MIAPOSCVis {
         y => yPos;
     }
 
-    public void oscSend(MIAP m) {
-        while (true) {
-            out.start("/pos");
-            out.add(xPos);
-            out.add(yPos);
+    public void addAllNodes(MIAP m) {
+        for (0 => int i; i < m.nodes.size(); i++) {
+            out.start("/coord");
+            out.add(i);
+            out.add(m.nodes[i].coordinate[0]);
+            out.add(m.nodes[i].coordinate[1]);
             out.send();
 
-            for (0 => int i; i < m.nodes.size(); i++) {
-                out.start("/coord");
-                out.add(i);
-                out.add(m.nodes[i].coordinate[0]);
-                out.add(m.nodes[i].coordinate[1]);
-                out.send();
+            out.start("/gain");
+            out.add(i);
+            out.add(m.nodes[i].gain);
+            out.send();
+        }
+    }
 
-                // <<< m.nodes[i].coordinate[1], m.nodes[i].coordinate[1] >>>;
+    public void updateNonZeroNodes(MIAP m) {
+        for (0 => int i; i < m.nodes.size(); i++) {
+            if (m.nodes[i].gain > 0) {
                 out.start("/gain");
                 out.add(i);
                 out.add(m.nodes[i].gain);
                 out.send();
             }
+        }
+    }
+
+    public void oscSend(MIAP m, int voice) {
+        addAllNodes(m);
+
+        while (true) {
+            out.start("/pos");
+            out.add(voice);
+            out.add(xPos);
+            out.add(yPos);
+            out.send();
 
             if (m.getActiveTriset() >= 0) {
                 out.start("/active");
@@ -57,7 +72,8 @@ public class MIAPOSCVis {
                 out.add(0);
                 out.send();
             }
-            second/60.0 => now;
+            updateNonZeroNodes(m);
+            second/30.0 => now;
         }
     }
 }
