@@ -5,9 +5,8 @@ OscOut agnes;
 OscOut ethel;
 OscOut vera;
 
-// agnes.dest("192.168.1.10", 12345);
 agnes.dest("192.168.1.10", 12345);
-ethel.dest("127.0.0.1", 12345);
+ethel.dest("192.168.1.20", 12345);
 vera.dest( "192.168.1.30", 12345);
 
 1::second => now;
@@ -49,21 +48,25 @@ fun void oscNodeShift(OscOut out, string addr, int shift) {
 
 fun void move(int voice, dur duration, float angle, float pow, dur offset) {
     offset => now;
-    //oscParams(agnes, "/p", voice, duration/second, angle, pow);
+    oscParams(agnes, "/p", voice, duration/second, angle, pow);
     oscParams(ethel, "/p", voice, duration/second, angle, pow);
-    //oscParams(vera,  "/p", voice, duration/second, angle, pow);
+    oscParams(vera,  "/p", voice, duration/second, angle, pow);
 
     // breathing room
     10::ms => now;
-    //oscMoveVoice(agnes, "/m", voice);
+    oscMoveVoice(agnes, "/m", voice);
     oscMoveVoice(ethel, "/m", voice);
-    //oscMoveVoice(vera,  "/m", voice);
+    oscMoveVoice(vera,  "/m", voice);
 }
 
 0::samp => dur totalDuration;
-// few contants
+
+// few constants
 2 * pi => float TAU;
 2.5 => float POW_RANGE;
+
+// node switching
+int nodeConfiguration;
 
 for (0.105 => float i; i < 1.0; 0.005 +=> i) {
     Math.pow(i, 6) => float scale;
