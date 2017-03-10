@@ -136,19 +136,19 @@ left.gain(0.0);
 right.gain(0.0);
 
 // ethel
-SndBuf ethel => WinFuncEnv ethelEnv => left;
+SndBuf ethel => ADSR ethelEnv => left;
 ethelEnv => right;
 ethel.read(me.dir() + "../wavs/ethel.wav");
 ethel.pos(ethel.samples());
 
 // agnes
-SndBuf agnes => WinFuncEnv agnesEnv => left;
+SndBuf agnes => ADSR agnesEnv => left;
 agnesEnv => right;
 agnes.read(me.dir() + "../wavs/agnes.wav");
 agnes.pos(agnes.samples());
 
 // vera
-SndBuf vera => WinFuncEnv veraEnv => left;
+SndBuf vera => ADSR veraEnv => left;
 veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
@@ -158,7 +158,7 @@ agnes.gain(0.5);
 vera.gain(0.5);
 
 // all the sound stuff we're doing
-fun void stretch(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
+fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
     duration/windows => dur grain;
     grain * 0.5 => dur halfGrain;
 
@@ -166,8 +166,8 @@ fun void stretch(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
         return;
     }
 
-    env.attack(halfGrain);
-    env.release(halfGrain);
+    env.attackTime(halfGrain);
+    env.releaseTime(halfGrain);
 
     buf.samples()/windows => int sampleIncrement;
 
