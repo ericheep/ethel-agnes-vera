@@ -9,3 +9,6 @@ The sound source is fairly arbitrary, as long as it is complex enough to perceiv
 
 ![miap](miap-image.png)
 
+![speaker-enclosure](speaker-enclosure-image.jpg)
+
+![node-grid](node-grid.jpg)
