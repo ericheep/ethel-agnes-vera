@@ -153,9 +153,9 @@ veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
-ethel.gain(0.5);
-agnes.gain(0.5);
-vera.gain(0.5);
+ethel.gain(0.25);
+agnes.gain(0.25);
+vera.gain(0.25);
 
 // all the sound stuff we're doing
 fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
