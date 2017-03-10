@@ -3,73 +3,117 @@
 MIAP m[3];
 MIAPOSCVis v[3];
 
-true => int debugPrint;
-false => int debugVis;
+false => int debugPrint;
+true => int debugVis;
 
 // if Processing debug
 if(debugVis) {
     for (0 => int i; i < m.size(); i++) {
-        spork ~ v[i].oscSend(m[i]);
+        spork ~ v[i].oscSend(m[i], i);
     }
 }
 
 // five rows, seven columns
 for (0 => int i; i < m.size(); i++) {
-    m[i].generateGrid(5, 7);
+    m[i].generateGrid(7, 7);
 }
 
 //        *-----*-----*-----*-----*-----*-----*
 //         \   / \   / \   / \   / \   / \   / \
 //          \ /   \ /   \ /   \ /   \ /   \ /   \
-//           *-----8-----9----10----11----12-----*
+//           *-----*-----9----10----11-----*-----*
 //          / \   / \   / \   / \   / \   / \   /
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
-//        *----15----16----17----18----19-----*
+//        *-----*----16----17----18----19-----*
 //         \   / \   / \   / \   / \   / \   / \
 //          \ /   \ /   \ /   \ /   \ /   \ /   \
 //           *----22----23----24----25----26-----*
 //          / \   / \   / \   / \   / \   / \   /
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
+//        *-----*----30----31----32----33-----*
+//         \   / \   / \   / \   / \   / \   / \
+//          \ /   \ /   \ /   \ /   \ /   \ /   \
+//           *-----*----37----38----39-----*-----*
+//          / \   / \   / \   / \   / \   / \   /
+//         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
 
 // L, R
-[[ 9, 16],
- [18, 10],
- [23, 24]] @=> int hexagon[][];
+[[17, 23],
+ [25, 18],
+ [31, 32]] @=> int smallHexagon[][];
 
-//                  9----10
-//                 / \   / \
-//                /   \ /   \
-//              16-----*----18
-//                \   / \   /
-//                 \ /   \ /
-//                 23----24
-
-// L, R
-[[ 8, 15],
- [19, 10],
- [23, 25]] @=> int zigzag[][];
-
-//            8          10
-//           / \         / \
-//          /   \       /   \
-//        15-----*-----*-----*----19
-//                \   /       \   /
-//                 \ /         \ /
-//                 23          25
+//               17----18
+//               /       \
+//              /         \
+//            23     *    25
+//              \         /
+//               \       /
+//               31----32
 
 // L, R
-[[ 8, 10],
- [26, 12],
- [22, 24]] @=> int rectangle[][];
+[[16, 23],
+ [25, 17],
+ [32, 33]] @=> int triangles[][];
 
-//         8-----*----10-----*----12
-//          \   / \   / \   / \   /
-//           \ /   \ /   \ /   \ /
-//            *-----*-----*-----*
-//           / \   / \   / \   / \
-//          /   \ /   \ /   \ /   \
-//        22-----*----24-----*----26
+//         16----17
+//          \    /
+//           \  /
+//            23     *    25
+//                        / \
+//                       /   \
+//                     32----33
+
+// L, R
+[[17, 22],
+ [26, 25],
+ [23, 32]] @=> int heartbeat[][];
+
+//               17
+//               / \
+//              /   \
+//      22----23     *    25----26
+//                    \   /
+//                     \ /
+//                     32
+
+// L, R
+[[17, 22],
+ [26, 11],
+ [37, 32]] @=> int bowtie[][];
+
+//                         11
+//                         / \
+//                        /   \
+//                17-----*     *
+//                /             \
+//               /               \
+//       22-----*     *     *----26
+//         \               /
+//          \             /
+//           *     *----32
+//            \   /
+//             \ /
+//             37
+
+// L, R
+[[ 9, 22],
+ [26, 11],
+ [37, 39]] @=> int largeHexagon[][];
+
+//               9----10----11
+//              /             \
+//             /               \
+//           16                19
+//           /                   \
+//          /                     \
+//        22           *          26
+//          \                     /
+//           \                   /
+//            0                33
+//             \               /
+//              \             /
+//              37----38----39
 
 OscIn in;
 OscMsg msg;
@@ -136,8 +180,8 @@ fun void stretchSound(int voice, dur duration) {
     }
 }
 
-m[0].nodes[17].coordinate[0] => float xCenter;
-m[0].nodes[17].coordinate[1] => float yCenter;
+m[0].nodes[24].coordinate[0] => float xCenter;
+m[0].nodes[24].coordinate[1] => float yCenter;
 
 0 => int whichPi;
 
@@ -145,11 +189,21 @@ fun float exponentialScale(float x, float pow) {
     return Math.pow(x, pow);
 }
 
+/*0.0 => float inc;
+while (true) {
+    moveSound(0, 5.0::second, 0.5, inc);
+    1.0 +=> inc;
+}*/
+
+fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float length) {
+    return [xOrigin + Math.cos(angle) * length, yOrigin + Math.sin(angle) * length];
+}
+
 // moves a sound from one end to another
 fun void moveSound(int voice, dur duration, float pow, float angle) {
     stretchSound(voice, duration);
 
-    0.5::ms => dur incrementalDuration;
+    1.0::ms => dur incrementalDuration;
     (duration/incrementalDuration)$int => int numIncrements;
     (numIncrements * 0.5) $int => int halfNumIncrements;
 
@@ -159,10 +213,17 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
     hexagon[whichPi][1] => int rNode;
 
     float x, y;
+    float coordinate[2];
+    float expScalar;
+
+    0.5 => float radius;
 
     for (halfNumIncrements => int i; i >= 0; i--) {
-        xCenter + exponentialScale(-i * scalar, pow) * Math.sin(angle) => x;
-        yCenter + exponentialScale(-i * scalar, pow) * Math.cos(angle) => y;
+        exponentialScale(i * scalar, pow) => expScalar;
+        vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
+
+        coordinate[0] => x;
+        coordinate[1] => y;
 
         m[voice].setPosition([x, y]);
         if (debugVis) {
@@ -172,12 +233,16 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
         left.gain(m[voice].nodes[lNode].gain);
         right.gain(m[voice].nodes[rNode].gain);
 
+        // <<< x, y >>>;
         incrementalDuration => now;
     }
 
     for (0 => int i; i < halfNumIncrements; i++) {
-        xCenter + exponentialScale(i * scalar, pow) * Math.sin(angle) => x;
-        yCenter + exponentialScale(i * scalar, pow) * Math.cos(angle) => y;
+        exponentialScale(i * scalar, pow) => expScalar;
+        vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
+
+        coordinate[0] => x;
+        coordinate[1] => y;
 
         m[voice].setPosition([x, y]);
 
@@ -188,6 +253,7 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
         left.gain(m[voice].nodes[lNode].gain);
         right.gain(m[voice].nodes[rNode].gain);
 
+        // <<< x, y >>>;
         incrementalDuration => now;
     }
 }
@@ -195,6 +261,7 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
 float seconds[3];
 float angle[3];
 float pow[3];
+float radius[3];
 
 // osc event loop
 while (true) {
@@ -212,6 +279,7 @@ while (true) {
             msg.getFloat(1) => seconds[voice];
             msg.getFloat(2) => angle[voice];
             msg.getFloat(3) => pow[voice];
+            msg.getFloat(4) => radius[voice];
 
 
             if (debugPrint) {
@@ -221,7 +289,7 @@ while (true) {
         if (msg.address == "/m") {
             msg.getInt(0) => int voice;
 
-            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice], radius[voice]);
 
             if (debugPrint) {
                 <<< "/m", voice, "" >>>;
