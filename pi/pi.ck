@@ -1,18 +1,22 @@
 // the same script run on multiple pis
 
-MIAP m;
-MIAPOSCVis v;
+MIAP m[3];
+MIAPOSCVis v[3];
 
-false => int debugPrint;
-true => int debugVis;
+true => int debugPrint;
+false => int debugVis;
 
 // if Processing debug
 if(debugVis) {
-    spork ~ v.oscSend(m);
+    for (0 => int i; i < m.size(); i++) {
+        spork ~ v[i].oscSend(m[i]);
+    }
 }
 
 // five rows, seven columns
-m.generateGrid(5, 7);
+for (0 => int i; i < m.size(); i++) {
+    m[i].generateGrid(5, 7);
+}
 
 //        *-----*-----*-----*-----*-----*-----*
 //         \   / \   / \   / \   / \   / \   / \
@@ -70,30 +74,82 @@ m.generateGrid(5, 7);
 OscIn in;
 OscMsg msg;
 
-
 12345 => in.port;
 in.listenAll();
 
-CNoise nois => Gain left => dac.left;
-nois => Gain right => dac.right;
+// sound stuff
+
+Gain left => dac.left;
+Gain right => dac.right;
 
 left.gain(0.0);
 right.gain(0.0);
 
-m.nodes[17].coordinate[0] => float xCenter;
-m.nodes[17].coordinate[1] => float yCenter;
+// ethel
+SndBuf ethel => WinFuncEnv ethelEnv => left;
+ethelEnv => right;
+ethel.read(me.dir() + "../wavs/ethel.wav");
+ethel.pos(ethel.samples());
+
+// agnes
+SndBuf agnes => WinFuncEnv agnesEnv => left;
+agnesEnv => right;
+agnes.read(me.dir() + "../wavs/agnes.wav");
+agnes.pos(agnes.samples());
+
+// vera
+SndBuf vera => WinFuncEnv veraEnv => left;
+veraEnv => right;
+vera.read(me.dir() + "../wavs/vera.wav");
+vera.pos(vera.samples());
+
+// all the sound stuff we're doing
+fun void stretch(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
+    duration/windows => dur grain;
+    grain * 0.5 => dur halfGrain;
+
+    if (halfGrain < 1.0::samp) {
+        return;
+    }
+
+    env.attack(halfGrain);
+    env.release(halfGrain);
+
+    buf.samples()/windows => int sampleIncrement;
+
+    for (0 => int i; i < windows; i++) {
+        buf.pos(i * sampleIncrement);
+        env.keyOn();
+        halfGrain => now;
+        env.keyOff();
+        halfGrain => now;
+    }
+}
+
+fun void stretchSound(int voice, dur duration) {
+    if (voice == 0) {
+        spork ~ stretch(ethel, ethelEnv, duration, 32);
+    } else if (voice == 1) {
+        spork ~ stretch(agnes, agnesEnv, duration, 32);
+    } else if (voice == 2) {
+        spork ~ stretch(vera, veraEnv, duration, 32);
+    }
+}
+
+m[0].nodes[17].coordinate[0] => float xCenter;
+m[0].nodes[17].coordinate[1] => float yCenter;
 
 0 => int whichPi;
-2::second => dur duration;
-1.0 => float pow;
-0.0 => float angle;
 
 fun float exponentialScale(float x, float pow) {
     return Math.pow(x, pow);
 }
 
-fun void moveSound(dur duration, float pow, float angle, float offset) {
-    1::ms => dur incrementalDuration;
+// moves a sound from one end to another
+fun void moveSound(int voice, dur duration, float pow, float angle) {
+    stretchSound(voice, duration);
+
+    0.5::ms => dur incrementalDuration;
     (duration/incrementalDuration)$int => int numIncrements;
     (numIncrements * 0.5) $int => int halfNumIncrements;
 
@@ -108,13 +164,13 @@ fun void moveSound(dur duration, float pow, float angle, float offset) {
         xCenter + exponentialScale(-i * scalar, pow) * Math.sin(angle) => x;
         yCenter + exponentialScale(-i * scalar, pow) * Math.cos(angle) => y;
 
-        m.setPosition([x, y]);
+        m[voice].setPosition([x, y]);
         if (debugVis) {
-            v.updatePos(x, y);
+            v[voice].updatePos(x, y);
         }
 
-        left.gain(m.nodes[lNode].gain);
-        right.gain(m.nodes[rNode].gain);
+        left.gain(m[voice].nodes[lNode].gain);
+        right.gain(m[voice].nodes[rNode].gain);
 
         incrementalDuration => now;
     }
@@ -123,26 +179,24 @@ fun void moveSound(dur duration, float pow, float angle, float offset) {
         xCenter + exponentialScale(i * scalar, pow) * Math.sin(angle) => x;
         yCenter + exponentialScale(i * scalar, pow) * Math.cos(angle) => y;
 
-        m.setPosition([x, y]);
+        m[voice].setPosition([x, y]);
 
         if (debugVis) {
-            v.updatePos(x, y);
+            v[voice].updatePos(x, y);
         }
 
-        left.gain(m.nodes[lNode].gain);
-        right.gain(m.nodes[rNode].gain);
+        left.gain(m[voice].nodes[lNode].gain);
+        right.gain(m[voice].nodes[rNode].gain);
 
         incrementalDuration => now;
     }
 }
 
-float inc;
+float seconds[3];
+float angle[3];
+float pow[3];
 
-while (true) {
-   inc + 0.04 => inc;
-   moveSound(400::ms, 1.0, pi * angle + inc, 0);
-}
-
+// osc event loop
 while (true) {
     in => now;
     while (in.recv(msg)) {
@@ -155,35 +209,22 @@ while (true) {
         }
         if (msg.address == "/p") {
             msg.getInt(0) => int voice;
-            msg.getFloat(1) => float duration;
-            msg.getFloat(2) => float angle;
-            msg.getFloat(3) => float pow;
+            msg.getFloat(1) => seconds[voice];
+            msg.getFloat(2) => angle[voice];
+            msg.getFloat(3) => pow[voice];
 
-            spork ~ moveSound(voice, duration, angle, pow);
 
             if (debugPrint) {
-                <<< "/m", "move", "" >>>;
+                <<< "/p", "seconds: ", seconds[voice], "angle: ", angle[voice], "pow: ", pow[voice]>>>;
             }
         }
-        if (msg.address == "/a") {
-            msg.getFloat(0) => angle;
+        if (msg.address == "/m") {
+            msg.getInt(0) => int voice;
+
+            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
 
             if (debugPrint) {
-                <<< "/a", "angle", "" >>>;
-            }
-        }
-        if (msg.address == "/d") {
-            msg.getFloat(0)::second => duration;
-
-            if (debugPrint) {
-                <<< "/d", duration/second, "" >>>;
-            }
-        }
-        if (msg.address == "/p") {
-            msg.getFloat(0) => pow;
-
-            if (debugPrint) {
-                <<< "/p", pow, "" >>>;
+                <<< "/m", voice, "" >>>;
             }
         }
     }

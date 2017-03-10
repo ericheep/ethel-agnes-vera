@@ -5,9 +5,26 @@ OscOut agnes;
 OscOut ethel;
 OscOut vera;
 
+// agnes.dest("192.168.1.10", 12345);
 agnes.dest("192.168.1.10", 12345);
-ethel.dest("192.168.1.20", 12345);
+ethel.dest("127.0.0.1", 12345);
 vera.dest( "192.168.1.30", 12345);
+
+1::second => now;
+
+agnes.start("/pi");
+agnes.add(0);
+agnes.send();
+
+ethel.start("/pi");
+ethel.add(1);
+ethel.send();
+
+vera.start("/pi");
+vera.add(2);
+vera.send();
+
+3::second => now;
 
 fun void oscParams(OscOut out, string addr, int voice, float seconds, float angle, float pow) {
     out.start(addr);
@@ -26,21 +43,21 @@ fun void oscMoveVoice(OscOut out, string addr, int voice) {
 
 fun void oscNodeShift(OscOut out, string addr, int shift) {
     out.start(addr);
-    out.add(voice);
+    out.add(shift);
     out.send();
 }
 
 fun void move(int voice, dur duration, float angle, float pow, dur offset) {
     offset => now;
-    oscParams(agnes, "/p", voice, duration/second, angle, pow);
+    //oscParams(agnes, "/p", voice, duration/second, angle, pow);
     oscParams(ethel, "/p", voice, duration/second, angle, pow);
-    oscParams(vera,  "/p", voice, duration/second, angle, pow);
+    //oscParams(vera,  "/p", voice, duration/second, angle, pow);
 
     // breathing room
     10::ms => now;
-    oscMoveVoice(agnes, "/m", voice);
+    //oscMoveVoice(agnes, "/m", voice);
     oscMoveVoice(ethel, "/m", voice);
-    oscMoveVoice(vera,  "/m", voice);
+    //oscMoveVoice(vera,  "/m", voice);
 }
 
 0::samp => dur totalDuration;
@@ -48,7 +65,7 @@ fun void move(int voice, dur duration, float angle, float pow, dur offset) {
 2 * pi => float TAU;
 2.5 => float POW_RANGE;
 
-for (0.005 => float i; i < 1.0; 0.005 +=> i) {
+for (0.105 => float i; i < 1.0; 0.005 +=> i) {
     Math.pow(i, 6) => float scale;
     scale * 30::second => dur duration;
 
@@ -61,16 +78,16 @@ for (0.005 => float i; i < 1.0; 0.005 +=> i) {
     scale * POW_RANGE + 0.5 => float scalarPow;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    spork ~ move(0, duration, scalarTau * 0.0/3.0, scalarPow, duration * 0.0/3.0);
+    spork ~ move(0, duration, scalarTau * 0.0/3.0 + scalarTau, scalarPow, duration * 0.0/3.0);
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
     if (scale > 0.33) {
-        spork ~ move(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0);
+        spork ~ move(1, duration, scalarTau * 1.0/3.0 + scalarTau, scalarPow, duration * 1.0/3.0);
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
     if (scale > 0.66) {
-        spork ~ move(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0);
+        spork ~ move(2, duration, scalarTau * 2.0/3.0 + scalarTau, scalarPow, duration * 2.0/3.0);
     }
 
     duration => now;

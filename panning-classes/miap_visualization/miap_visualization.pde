@@ -15,7 +15,7 @@ Triset triset;
 
 void setup() {
   background(0);
-  frameRate(60);
+  frameRate(30);
   //fullScreen();
   size(800, 800);
   
