@@ -1,17 +1,17 @@
 // the same script run on multiple pis
 
 MIAP m[3];
-MIAPOSCVis v[3];
+// MIAPOSCVis v[3];
 
 false => int debugPrint;
 false => int debugVis;
 
 // if Processing debug
-if(debugVis) {
-    for (0 => int i; i < m.size(); i++) {
-        spork ~ v[i].oscSend(m[i], i);
-    }
-}
+// if(debugVis) {
+//     for (0 => int i; i < m.size(); i++) {
+//         spork ~ v[i].oscSend(m[i], i);
+//     }
+// }
 
 // five rows, seven columns
 for (0 => int i; i < m.size(); i++) {
@@ -236,9 +236,9 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
         coordinate[1] => y;
 
         m[voice].setPosition([x, y]);
-        if (debugVis) {
-            v[voice].updatePos(x, y);
-        }
+        // if (debugVis) {
+        //     v[voice].updatePos(x, y);
+        // }
 
         left.gain(m[voice].nodes[lNode].gain);
         right.gain(m[voice].nodes[rNode].gain);
@@ -256,9 +256,9 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
 
         m[voice].setPosition([x, y]);
 
-        if (debugVis) {
-            v[voice].updatePos(x, y);
-        }
+        // if (debugVis) {
+        //     v[voice].updatePos(x, y);
+        // }
 
         left.gain(m[voice].nodes[lNode].gain);
         right.gain(m[voice].nodes[rNode].gain);
