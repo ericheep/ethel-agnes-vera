@@ -6,26 +6,32 @@ import netP5.*;
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 
-float posX;
-float posY;
-boolean trisetActive = false;
+int voices = 3;
+float posX[] = new float[3];
+float posY[] = new float[3];
+
+boolean[] trisetActive = new boolean[3];
 
 Node[] nodes;
 Triset triset;
 
 void setup() {
   background(0);
-  frameRate(30);
+  frameRate(60);
   //fullScreen();
   size(800, 800);
-  
-  nodes = new Node[35];
-  for (int i = 0; i < nodes.length; i++) {
-     nodes[i] = new Node(); 
+
+  for (int i = 0; i < voices; i++) {
+     trisetActive[i] = false; 
   }
-  
+
+  nodes = new Node[49];
+  for (int i = 0; i < nodes.length; i++) {
+    nodes[i] = new Node();
+  }
+
   triset = new Triset();
-  
+
   oscP5 = new OscP5(this, 12000);
   myRemoteLocation = new NetAddress("127.0.0.1", 12000);
   colorMode(HSB, 360); 
@@ -34,8 +40,9 @@ void setup() {
 
 void oscEvent(OscMessage msg) {
   if (msg.checkAddrPattern("/pos") == true) {
-    posX = msg.get(0).floatValue();
-    posY = msg.get(1).floatValue();
+    int voice = msg.get(0).intValue();
+    posX[voice] = msg.get(1).floatValue();
+    posY[voice] = msg.get(2).floatValue();
   }
   if (msg.checkAddrPattern("/coord") == true) {
     int idx = msg.get(0).intValue();
@@ -55,10 +62,11 @@ void oscEvent(OscMessage msg) {
     triset.setActiveCoordinate(idx, x, y);
   }
   if (msg.checkAddrPattern("/active") == true) {
-    if (msg.get(0).intValue() == 1) {
-      trisetActive = true;
+    int voice = msg.get(0).intValue();
+    if (msg.get(2).intValue() == 1) {
+      trisetActive[voice] = true;
     } else {
-      trisetActive = false;
+      trisetActive[voice] = false;
     }
   }
 }
@@ -70,11 +78,13 @@ void draw() {
   fill(0, 0, 0, 55);
   rect(0, 0, width, height);
   stroke(330, 360, 360);
-  ellipse(posX * width, posY * height, 10, 10);
-  for (int i = 0; i < nodes.length; i++) {
-     nodes[i].update(120); 
+  for (int i = 0; i < 3; i++) {
+    ellipse(posX[i] * width, posY[i] * height, 10, 10);
+    if (trisetActive[i]) {
+      triset.update(posX[i] * width, posY[i] * height);
+    }
   }
-  if (trisetActive) {
-    triset.update(posX * width, posY * height);
+  for (int i = 0; i < nodes.length; i++) {
+    nodes[i].update(120);
   }
 }
