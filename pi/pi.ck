@@ -4,7 +4,7 @@ MIAP m[3];
 MIAPOSCVis v[3];
 
 false => int debugPrint;
-true => int debugVis;
+false => int debugVis;
 
 // if Processing debug
 if(debugVis) {
@@ -37,6 +37,7 @@ for (0 => int i; i < m.size(); i++) {
 //          / \   / \   / \   / \   / \   / \   /
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
+
 
 // L, R
 [[17, 23],
@@ -115,6 +116,9 @@ for (0 => int i; i < m.size(); i++) {
 //              \             /
 //              37----38----39
 
+// sets small hexagon to be the first config
+smallHexagon @=> int currentNodeConfiguration[][];
+
 OscIn in;
 OscMsg msg;
 
@@ -122,7 +126,6 @@ OscMsg msg;
 in.listenAll();
 
 // sound stuff
-
 Gain left => dac.left;
 Gain right => dac.right;
 
@@ -209,8 +212,8 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
 
     1.0/halfNumIncrements => float scalar;
 
-    hexagon[whichPi][0] => int lNode;
-    hexagon[whichPi][1] => int rNode;
+    currentNodeConfiguration[whichPi][0] => int lNode;
+    currentNodeConfiguration[whichPi][1] => int rNode;
 
     float x, y;
     float coordinate[2];
@@ -258,10 +261,28 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
     }
 }
 
+fun void shiftNode(int nodeConfig) {
+    if (nodeConfig == 0) {
+        smallHexagon @=> currentNodeConfiguration;
+    }
+    if (nodeConfig == 1) {
+        triangles @=> currentNodeConfiguration;
+    }
+    if (nodeConfig == 2) {
+        heartbeat @=> currentNodeConfiguration;
+    }
+    if (nodeConfig == 3) {
+        bowtie @=> currentNodeConfiguration;
+    }
+    if (nodeConfig == 4) {
+        largeHexagon @=> currentNodeConfiguration;
+    }
+
+}
+
 float seconds[3];
 float angle[3];
 float pow[3];
-float radius[3];
 
 // osc event loop
 while (true) {
@@ -274,12 +295,18 @@ while (true) {
                 <<< "/pi", whichPi, "" >>>;
             }
         }
+        if (msg.address == "/n") {
+            msg.getInt(0) => int nodeConfiguration;
+
+            if (debugPrint) {
+                <<< "/n", nodeConfiguration, "" >>>;
+            }
+        }
         if (msg.address == "/p") {
             msg.getInt(0) => int voice;
             msg.getFloat(1) => seconds[voice];
             msg.getFloat(2) => angle[voice];
             msg.getFloat(3) => pow[voice];
-            msg.getFloat(4) => radius[voice];
 
 
             if (debugPrint) {
@@ -289,7 +316,7 @@ while (true) {
         if (msg.address == "/m") {
             msg.getInt(0) => int voice;
 
-            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice], radius[voice]);
+            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
 
             if (debugPrint) {
                 <<< "/m", voice, "" >>>;
