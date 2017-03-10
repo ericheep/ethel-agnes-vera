@@ -38,6 +38,9 @@ for (0 => int i; i < m.size(); i++) {
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
 
+// ethel
+// agnes
+// aera
 
 // L, R
 [[17, 23],
@@ -149,6 +152,10 @@ SndBuf vera => WinFuncEnv veraEnv => left;
 veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
+
+ethel.gain(0.5);
+agnes.gain(0.5);
+vera.gain(0.5);
 
 // all the sound stuff we're doing
 fun void stretch(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
@@ -316,7 +323,17 @@ while (true) {
         if (msg.address == "/m") {
             msg.getInt(0) => int voice;
 
-            spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            if (voice == 0) {
+                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            }
+            if (voice == 1) {
+                0.3::ms => now;
+                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            }
+            if (voice == 2) {
+                0.3::ms => now;
+                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            }
 
             if (debugPrint) {
                 <<< "/m", voice, "" >>>;

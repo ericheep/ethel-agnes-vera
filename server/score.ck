@@ -9,7 +9,7 @@ agnes.dest("192.168.1.10", 12345);
 ethel.dest("192.168.1.20", 12345);
 vera.dest( "192.168.1.30", 12345);
 
-1::second => now;
+0.5::second => now;
 
 agnes.start("/pi");
 agnes.add(0);
@@ -23,7 +23,7 @@ vera.start("/pi");
 vera.add(2);
 vera.send();
 
-3::second => now;
+0.5::second => now;
 
 fun void oscParams(OscOut out, string addr, int voice, float seconds, float angle, float pow) {
     out.start(addr);
@@ -68,7 +68,7 @@ fun void move(int voice, dur duration, float angle, float pow, dur offset) {
 // node switching
 int nodeConfiguration;
 
-for (0.105 => float i; i < 1.0; 0.005 +=> i) {
+for (0.450 => float i; i < 1.0; 0.005 +=> i) {
     Math.pow(i, 6) => float scale;
     scale * 30::second => dur duration;
 
@@ -79,6 +79,7 @@ for (0.105 => float i; i < 1.0; 0.005 +=> i) {
 
     // a range of 0.5 -> 3.0
     scale * POW_RANGE + 0.5 => float scalarPow;
+    <<< scale >>>;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
     spork ~ move(0, duration, scalarTau * 0.0/3.0 + scalarTau, scalarPow, duration * 0.0/3.0);
