@@ -118,38 +118,14 @@ public class MIAP {
             }
         }
 
-        //for (0 => int i; i < numNodes; i++) {
-        //    if (pointNearNode(pos, nodes[i])) {
-        //        return;
-        //    }
-        //}
-
         // if it is a new triset, we clear the active trisets,
         // and then scan all the trisets to find where the position
         // currently is
         clearActiveTrisets();
         clearTrisetGains();
 
-        // if a the position (derived node) falls exactly on
-        // the edge of two trisets, we don't need to scan to
-        // see if it's inside the triset, but we also don't
-        // consider that to be an active triset
-        /*0 => int numActiveSides;
-        for (0 => int i; i < numTrisets; i++) {
-            if (pointOnTrisetSide(pos, trisets[i])) {
-                setTrisetNodes(pos, trisets[i]);
-                return;
-                numActiveSides++;
-            }
-            if (numActiveSides > 1) {
-                return;
-            }
-        }
-        */
-
         // if the position (derived node) does not fall in the
-        // previous triset and does not fall on the edge that lies
-        // in between two trisets, then scan to see if it falls
+        // previous triset, then we scan to see if it falls
         // inside of a new triset
         for (0 => int i; i < numTrisets; i++) {
             if (pointInTriset(pos, trisets[i])) {
@@ -189,15 +165,9 @@ public class MIAP {
         Math.sqrt(n2Area * triset.areaScalar) => float g2;
         Math.sqrt(n3Area * triset.areaScalar) => float g3;
 
-        //if (!Math.isinf(g1) && !Math.isnan(g1)) {
-            g1 => triset.gain[0] => nodes[triset.nodeId[0]].gain;
-        //}
-        //if (!Math.isinf(g2) && !Math.isnan(g2)) {
-            g2 => triset.gain[1] => nodes[triset.nodeId[1]].gain;
-        //}
-        //if (!Math.isinf(g3) && !Math.isnan(g3)) {
-            g3 => triset.gain[2] => nodes[triset.nodeId[2]].gain;
-        //}
+        g1 => triset.gain[0] => nodes[triset.nodeId[0]].gain;
+        g2 => triset.gain[1] => nodes[triset.nodeId[1]].gain;
+        g3 => triset.gain[2] => nodes[triset.nodeId[2]].gain;
     }
 
     // area of a triangle given the lengths of its sides
@@ -210,15 +180,6 @@ public class MIAP {
     private float distance(float A[], float B[]) {
         return Math.sqrt(Math.pow((B[0] - A[0]), 2) + Math.pow((B[1] - A[1]), 2));
     }
-
-    private int pointNearNode(float pos[], Node node) {
-        distance(pos, [node.coordinate[0], node.coordinate[1]]) => float dist;
-        if (dist < 0.01) {
-            return 1;
-        }
-        return 0;
-    }
-
 
     // http://blackpawn.com/texts/pointinpoly/
     // many values were precalculated in the constructor to save on processing
@@ -236,45 +197,8 @@ public class MIAP {
         return (u >= 0) && (v >= 0) && ((u + v) < 1);
     }
 
-    private int pointOnTrisetSide(float pos[], Triset triset) {
-        triset.coordinate[0] @=> float A[];
-        triset.coordinate[1] @=> float B[];
-        triset.coordinate[2] @=> float C[];
-
-        return pointOnSide(A, B, pos) || pointOnSide(B, C, pos) || pointOnSide(A, C, pos);
-    }
-
-    // http://stackoverflow.com/questions/11907947/how-to-check-if-a-point-lies-on-a-line-between-2-other-points
-    private int pointOnSide(float A[], float B[], float pos[]) {
-        // if collinear, then see if pos falls in between A and B
-        (pos[0] - A[0]) => float dxc;
-        (pos[1] - A[1]) => float dyc;
-
-        (B[0] - A[0]) => float dxl;
-        (B[1] - A[1]) => float dyl;
-
-        if (crossProduct(dxc, dyc, dxl, dyl) == 0) {
-            // <<< "!: [", A[0], A[1], "]  [", B[0], B[1], "]  [", pos[0], pos[1], "]" >>>;
-            if (Math.fabs(dxl) >= Math.fabs(dyl)) {
-                return dxl > 0 ?
-                    A[0] <= pos[0] && pos[0] <= B[0] :
-                    B[0] <= pos[0] && pos[0] <= B[0];
-            } else {
-                return dyl > 0 ?
-                    A[1] <= pos[1] && pos[1] <= B[1] :
-                    B[1] <= pos[1] && pos[1] <= A[1];
-            }
-        } else {
-            return 0;
-        }
-    }
-
     private float[] computeVector(float R[], float S[]) {
         return [R[0] - S[0], R[1] - S[1]];
-    }
-
-    private float crossProduct(float dxc, float dyc, float dxl, float dyl) {
-        return dxc * dyl - dyc * dxl;
     }
 
     private float dotProduct(float v[], float u[], int n) {
