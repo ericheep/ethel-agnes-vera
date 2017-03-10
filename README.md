@@ -8,6 +8,7 @@ The performer in this piece moves the speakers to various nodes in accordance to
 
 The sound source used is a computer voice repeating three names that correspond to the titles of the Raspbery Pis themselves, in this case `ethel`, `agnes`, and `vera`.
 
+The ultimate goal for this piece would be to have it in a large enough space to allow the audience to remain within the changing nodes, allowing for more human intrusion into the system.
 
 ![miap](miap-image.png)
 
@@ -19,4 +20,4 @@ A custom set of speakers are used, with 3d printed speaker-enclosures.
 
 ![node-grid](node-grid.jpg)
 
-A tenative setup for the piece.
+A tentative setup for the piece.
