@@ -7,6 +7,9 @@
 OscOut agnes;
 OscOut ethel;
 OscOut vera;
+OscOut local;
+
+local.dest("127.0.0.1", 12345);
 
 // start it up
 ethel.dest("192.168.1.20", 12345);
@@ -52,29 +55,29 @@ fun void oscNodeConfiguration(OscOut out, int nodeConfig) {
 }
 
 fun void setNode(int nodeConfig) {
+    oscNodeConfiguration(local, nodeConfig);
     oscNodeConfiguration(ethel, nodeConfig);
     oscNodeConfiguration(agnes, nodeConfig);
     oscNodeConfiguration(vera, nodeConfig);
 }
 
-fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offset) {
+fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offset, int nodeConfig) {
     offset => now;
+    oscTrigger(local, voice, duration/second, angle, pow);
     oscTrigger(ethel, voice, duration/second, angle, pow);
     oscTrigger(agnes, voice, duration/second, angle, pow);
     oscTrigger(vera,  voice, duration/second, angle, pow);
-    setNode(currentNodeConfig);
+    setNode(nodeConfig);
 }
 
 // compositional parameters ~*~*~*~*~*~*~*~
 
 2 * pi => float TAU;
 
-0 => int currentNodeConfig;
-
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.1000 => float startingInc;
+0.1500 => float startingInc;
 0.0085 => float runningInc;
 0.0035 => float codaRunningInc;
 
@@ -84,9 +87,11 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 2.0/3.0 => float twoThirds;
 
 0.5 => float powRange;
-0.75 => float powOffset;
+0.5 => float powOffset;
 
-0.5 => float rotationsPerSection;
+0.25 => float rotationsPerSection;
+pi => float angleOffset;
+
 
 // calculate the entire length of the piece
 0::samp => dur totalDuration;
@@ -95,46 +100,44 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     scale * totalIncrementTime +=> totalDuration;
 }
 
-totalDuration/6.0 => dur nodeChangeIncrementTime;
-1 => int nodeChange;
+totalDuration/6.0 => dur nodeConfigIncrementTime;
+0 => int nodeConfig;
+
+0::samp => dur runningDuration;
 
 // and here we go ~*~*~*~*~*~*~*~*~*
-0::samp => dur runningDuration;
 for (startingInc => float i; i < 1.0; runningInc +=> i) {
     Math.pow(i, exponentialModifier) => float scale;
     scale * totalIncrementTime => dur duration;
-    nodeChange => currentNodeConfig;
 
     // to track node changes
     duration +=> runningDuration;
 
     // a range of 0 -> 2pi
-    i * TAU => float linearScalarTau;
+    (1.0 - i) * TAU => float linearScalarTau;
 
     // a range of 0.5 -> 3.0
     i * powRange + powOffset => float scalarPow;
-    (linearScalarTau * rotationsPerSection) => float angle;
+    angleOffset + (linearScalarTau * rotationsPerSection) => float angle;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    triggerVoice(0, duration, linearScalarTau, angle, 0::samp);
-
-    // <<< scalarPow >>>;
+    triggerVoice(0, duration, linearScalarTau, angle, 0::samp, nodeConfig);
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
     if (scale > oneThird) {
-        spork ~ triggerVoice(1, duration, scalarPow, angle * oneThird, duration * oneThird);
+        spork ~ triggerVoice(1, duration, scalarPow, angle * oneThird, duration * oneThird, nodeConfig);
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
     if (scale > twoThirds) {
-        spork ~ triggerVoice(2, duration, scalarPow, angle * twoThirds, duration * twoThirds);
+        spork ~ triggerVoice(2, duration, scalarPow, angle * twoThirds, duration * twoThirds, nodeConfig);
     }
 
-    if (nodeChange < 5) {
-        if (runningDuration > nodeChangeIncrementTime * nodeChange) {
-            <<< "Time\t:", runningDuration/minute, "\tChange to configuration:", nodeChange >>>;
-            setNode(nodeChange);
-            nodeChange++;
+    if (nodeConfig < 5) {
+        if (runningDuration > nodeConfigIncrementTime * (nodeConfig + 1)) {
+            <<< "Time\t:", runningDuration/minute, "\tChange to configuration:", nodeConfig >>>;
+            setNode(nodeConfig);
+            nodeConfig++;
         }
     }
 
@@ -148,7 +151,7 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
 29::second => now;
 
 // set last node
-setNode(5);
+setNode(4);
 1::second => now;
 
 // coda
@@ -162,9 +165,9 @@ for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
     // a range of 0.5 -> 3.0
     scale * powRange + powOffset => float scalarPow;
 
-    spork ~ triggerVoice(0, duration, scalarTau * 0.0/3.0, scalarPow, 0::samp);
-    spork ~ triggerVoice(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0);
-    spork ~ triggerVoice(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0);
+    spork ~ triggerVoice(0, duration, scalarTau * 0.0/3.0, scalarPow, 0::samp, nodeConfig);
+    spork ~ triggerVoice(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0, nodeConfig);
+    spork ~ triggerVoice(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0, nodeConfig);
 
     duration => now;
 }

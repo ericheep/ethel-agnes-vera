@@ -182,10 +182,11 @@ vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
 // oh yea! turn it up! (default values)
-ethel.gain(1.0);
-agnes.gain(1.0);
-vera.gain(1.0);
-dac.gain(0.8);
+ethel.gain(0.5);
+agnes.gain(0.5);
+vera.gain(0.5);
+
+dac.gain(0.9);
 
 // all the sound stuff we're doing
 fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
@@ -263,6 +264,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
+        <<< nodes[0], nodes[1] >>>;
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
         rightGain.gain(m[voice].nodes[nodes[1]].gain);
 
