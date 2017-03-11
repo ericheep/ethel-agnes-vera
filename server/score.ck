@@ -1,16 +1,21 @@
 // Eric Heep
-// March 8th, 2017
+// March 10th, 2017
+
+// OSC sender that controls the piece,
+// essenctially the score of the piece
 
 OscOut agnes;
 OscOut ethel;
 OscOut vera;
 
+// start it up
 agnes.dest("192.168.1.10", 12345);
 ethel.dest("192.168.1.20", 12345);
 vera.dest( "192.168.1.30", 12345);
 
-0.5::second => now;
+0.1::second => now;
 
+// let em know who's who
 agnes.start("/pi");
 agnes.add(0);
 agnes.send();
@@ -23,20 +28,19 @@ vera.start("/pi");
 vera.add(2);
 vera.send();
 
-0.5::second => now;
+0.1::second => now;
 
-fun void oscParams(OscOut out, string addr, int voice, float seconds, float angle, float pow) {
+// few constants
+2 * pi => float TAU;
+2.5 => float POW_RANGE;
+
+// osc functions
+fun void oscMove(OscOut out, string addr, int voice, float seconds, float angle, float pow) {
     out.start(addr);
     out.add(voice);
     out.add(seconds);
     out.add(angle);
     out.add(pow);
-    out.send();
-}
-
-fun void oscMoveVoice(OscOut out, string addr, int voice) {
-    out.start(addr);
-    out.add(voice);
     out.send();
 }
 
@@ -48,57 +52,42 @@ fun void oscNodeShift(OscOut out, string addr, int shift) {
 
 fun void move(int voice, dur duration, float angle, float pow, dur offset) {
     offset => now;
-    oscParams(agnes, "/p", voice, duration/second, angle, pow);
-    oscParams(ethel, "/p", voice, duration/second, angle, pow);
-    oscParams(vera,  "/p", voice, duration/second, angle, pow);
-
-    // breathing room
-    10::ms => now;
-    oscMoveVoice(agnes, "/m", voice);
-    oscMoveVoice(ethel, "/m", voice);
-    oscMoveVoice(vera,  "/m", voice);
+    oscMove(agnes, "/m", voice, duration/second, angle, pow);
+    oscMove(ethel, "/m", voice, duration/second, angle, pow);
+    oscMove(vera,  "/m", voice, duration/second, angle, pow);
 }
 
-0::samp => dur totalDuration;
-
-// few constants
-2 * pi => float TAU;
-2.5 => float POW_RANGE;
-
-// node switching
+// a global for node switching
 int nodeConfiguration;
 
 for (0.450 => float i; i < 1.0; 0.005 +=> i) {
-    Math.pow(i, 6) => float scale;
+    now => time past;
+    Math.pow(i, 3) => float scale;
     scale * 30::second => dur duration;
-
-    duration +=> totalDuration;
 
     // a range of 0 -> 2pi
     scale * TAU => float scalarTau;
 
     // a range of 0.5 -> 3.0
     scale * POW_RANGE + 0.5 => float scalarPow;
-    <<< scale >>>;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    spork ~ move(0, duration, scalarTau * 0.0/3.0 + scalarTau, scalarPow, duration * 0.0/3.0);
+    //move(0, duration, scalarTau * 0.0/3.0 + scalarTau, scalarPow, duration * 0.0/3.0);
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
-    if (scale > 0.33) {
+    /*if (scale > 0.33) {
         spork ~ move(1, duration, scalarTau * 1.0/3.0 + scalarTau, scalarPow, duration * 1.0/3.0);
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
     if (scale > 0.66) {
         spork ~ move(2, duration, scalarTau * 2.0/3.0 + scalarTau, scalarPow, duration * 2.0/3.0);
-    }
+    }*/
 
     duration => now;
-
-    // breathing room
-    1::samp => now;
 }
+
+/*
 
 // to make up for the offset time,
 // should be 10 seconds of silence as well
@@ -124,3 +113,5 @@ for (1.0 => float i; i > 0.0; 0.01 -=> i) {
     // breathing room
     1::samp => now;
 }
+
+*/

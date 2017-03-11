@@ -49,6 +49,7 @@ m[0].nodes[24].coordinate[1] => float yCenter;
 // the array below defines the speaker nodes for
 // the three Raspberry Pis
 
+// for example:
 // ethel [17, 23]
 // agnes [25, 18]
 // vera  [31, 32]
@@ -130,9 +131,6 @@ m[0].nodes[24].coordinate[1] => float yCenter;
 //              \             /
 //              37----38----39
 
-// sets small hexagon to be the first config
-smallHexagon @=> int currentNodeConfiguration[][];
-
 OscIn in;
 OscMsg msg;
 
@@ -203,7 +201,7 @@ fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
 
         (i * sampleIncrement)::samp + grain => dur end;
 
-        // only fade if there will be no dicontinuity errors
+        // only fade if there will be no discontinuity errors
         if (end < buf.samples()::samp) {
             env.keyOn();
             halfGrain => now;
@@ -223,7 +221,7 @@ fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float le
 }
 
 // moves a sound from one end to another
-fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float pow, float angle) {
+fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float pow, float angle, int nodes[]) {
 
     // returns the id to the exit array so
     // there is no overlapping, very experimental
@@ -242,43 +240,34 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
     // one divide instead of like three thousand right?
     1.0/halfNumIncrements => float scalar;
 
-    currentNodeConfiguration[whichPi][0] => int lNode;
-    currentNodeConfiguration[whichPi][1] => int rNode;
-
-    float x, y;
-    float coordinate[2];
-    float expScalar;
-
+    [0.0, 0.0] @=> float coordinate[2];
+    0.0 => float expScalar;
     0.5 => float radius;
 
-    // 0.0 - 0.5 in vector land
+    // from 0.0 to center
     for (halfNumIncrements => int i; i >= 0; i--) {
         exponentialScale(i * scalar, pow) => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
 
-        coordinate[0] => x;
-        coordinate[1] => y;
+        m[voice].setPosition(coordinate);
 
-        m[voice].setPosition([x, y]);
-
-        leftGain.gain(m[voice].nodes[lNode].gain);
-        rightGain.gain(m[voice].nodes[rNode].gain);
+        // adjust the proper gain UGens
+        leftGain.gain(m[voice].nodes[nodes[0]].gain);
+        rightGain.gain(m[voice].nodes[nodes[1]].gain);
 
         incrementalDuration => now;
     }
 
-    // 0.5 - 1.0 in vector land
+    // from center to 1.0
     for (0 => int i; i < halfNumIncrements; i++) {
         exponentialScale(i * scalar, pow) => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
 
-        coordinate[0] => x;
-        coordinate[1] => y;
+        m[voice].setPosition(coordinate);
 
-        m[voice].setPosition([x, y]);
-
-        leftGain.gain(m[voice].nodes[lNode].gain);
-        rightGain.gain(m[voice].nodes[rNode].gain);
+        // adjust the proper gain UGens
+        leftGain.gain(m[voice].nodes[nodes[0]].gain);
+        rightGain.gain(m[voice].nodes[nodes[1]].gain);
 
         incrementalDuration => now;
     }
@@ -286,32 +275,14 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
     0 => voiceRunning[voice];
 }
 
-fun void shiftNode(int nodeConfig) {
-    if (nodeConfig == 0) {
-        smallHexagon @=> currentNodeConfiguration;
-    }
-    if (nodeConfig == 1) {
-        triangles @=> currentNodeConfiguration;
-    }
-    if (nodeConfig == 2) {
-        heartbeat @=> currentNodeConfiguration;
-    }
-    if (nodeConfig == 3) {
-        bowtie @=> currentNodeConfiguration;
-    }
-    if (nodeConfig == 4) {
-        largeHexagon @=> currentNodeConfiguration;
-    }
-
-}
-
-float seconds[3];
-float angle[3];
-float pow[3];
-
-
 // osc event loop
 while (true) {
+
+    // stores the current node configuration
+    // which relates to the pi's placement
+    // in the grid
+    int piNodes[];
+
     in => now;
     while (in.recv(msg)) {
         if (msg.address == "/pi") {
@@ -323,6 +294,22 @@ while (true) {
         }
         if (msg.address == "/n") {
             msg.getInt(0) => int nodeConfiguration;
+
+            if (nodeConfiguration == 0) {
+                smallHexagon[whichPi] @=> piNodes;
+            }
+            if (nodeConfiguration == 1) {
+                triangles[whichPi] @=> piNodes;
+            }
+            if (nodeConfiguration == 2) {
+                heartbeat[whichPi] @=> piNodes;
+            }
+            if (nodeConfiguration == 3) {
+                bowtie[whichPi] @=> piNodes;
+            }
+            if (nodeConfiguration == 4) {
+                largeHexagon[whichPi] @=> piNodes;
+            }
 
             if (debugPrint) {
                 <<< "/n", nodeConfiguration, "" >>>;
@@ -341,17 +328,20 @@ while (true) {
 
             // ethel
             if (voice == 0) {
-                spork ~ moveVoice(voice, ethelLeft, ethelRight, seconds::second, angle, pow);
+                spork ~ moveVoice(voice, ethelLeft, ethelRight,
+                                  seconds::second, angle, pow, piNodes);
                 spork ~ startVoice(ethel, ethelEnv, seconds::second, 32);
             }
             // agnes
             else if (voice == 1) {
-                spork ~ moveVoice(voice, agnesLeft, agnesRight, seconds::second, angle, pow);
+                spork ~ moveVoice(voice, agnesLeft, agnesRight,
+                                  seconds::second, angle, pow, piNodes);
                 spork ~ startVoice(agnes, agnesEnv, seconds::second, 32);
             }
             // vera
             else if (voice == 2) {
-                spork ~ moveVoice(voice, veraLeft, veraRight, seconds::second, angle, pow);
+                spork ~ moveVoice(voice, veraLeft, veraRight,
+                                  seconds::second, angle, pow, piNodes);
                 spork ~ startVoice(vera, veraEnv, seconds::second, 32);
             }
 
