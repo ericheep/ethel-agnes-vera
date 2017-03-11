@@ -240,7 +240,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
     // one divide instead of like three thousand right?
     1.0/halfNumIncrements => float scalar;
 
-    [0.0, 0.0] @=> float coordinate[2];
+    float coordinate[2];
     0.0 => float expScalar;
     0.5 => float radius;
 
@@ -281,7 +281,7 @@ while (true) {
     // stores the current node configuration
     // which relates to the pi's placement
     // in the grid
-    [0, 0] @=> int piNodes[];
+    int piNodes[2];
 
     in => now;
     while (in.recv(msg)) {
