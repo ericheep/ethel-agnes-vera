@@ -244,7 +244,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
     0.0 => float expScalar;
     0.5 => float radius;
 
-    <<< nodes >>>;
+    <<< nodes[0], nodes[1] >>>;
 
     // from 0.0 to center
     for (halfNumIncrements => int i; i >= 0; i--) {
