@@ -281,7 +281,7 @@ while (true) {
     // stores the current node configuration
     // which relates to the pi's placement
     // in the grid
-    int piNodes[];
+    [0, 0] @=> int piNodes[];
 
     in => now;
     while (in.recv(msg)) {
