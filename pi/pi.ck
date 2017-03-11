@@ -330,19 +330,19 @@ while (true) {
             if (voice == 0) {
                 spork ~ moveVoice(voice, ethelLeft, ethelRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(ethel, ethelEnv, seconds::second, 32);
+                spork ~ startVoice(ethel, ethelEnv, seconds::second, 64);
             }
             // agnes
             else if (voice == 1) {
                 spork ~ moveVoice(voice, agnesLeft, agnesRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(agnes, agnesEnv, seconds::second, 32);
+                spork ~ startVoice(agnes, agnesEnv, seconds::second, 64);
             }
             // vera
             else if (voice == 2) {
                 spork ~ moveVoice(voice, veraLeft, veraRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(vera, veraEnv, seconds::second, 32);
+                spork ~ startVoice(vera, veraEnv, seconds::second, 64);
             }
 
             if (debugPrint) {
