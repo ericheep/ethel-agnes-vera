@@ -7,10 +7,10 @@
 // entirely on the OSC sender
 
 MIAP m[3];
-MIAPOSCVis v[3];
+// MIAPOSCVis v[3];
 
 for (int i; i < 3; i++) {
-    spork ~ v[i].oscSend(m[i], i);
+    // spork ~ v[i].oscSend(m[i], i);
 }
 
 int voiceId[3];
@@ -260,7 +260,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
 
         m[voice].setPosition(coordinate);
-        v[voice].updatePos(coordinate[0], coordinate[1]);
+        // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
@@ -275,7 +275,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
 
         m[voice].setPosition(coordinate);
-        v[voice].updatePos(coordinate[0], coordinate[1]);
+        // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
@@ -352,7 +352,7 @@ while (true) {
             }
 
             if (debugPrint) {
-                <<< "/m", "voice:" voice, "nodes: [", piNodes[0], piNodes[1], "]", "" >>>;
+                <<< "/m", "voice:", voice, "nodes: [", piNodes[0], piNodes[1], "]", "" >>>;
             }
         }
     }
