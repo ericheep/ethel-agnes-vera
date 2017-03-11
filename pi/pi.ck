@@ -13,6 +13,10 @@ int voiceRunning[3];
 // very important variable
 0 => int whichPi;
 
+// stores the current node configuration which
+// relates to the pi's placement in the grid
+int piNodes[2];
+
 // turn off for speed
 true => int debugPrint;
 
@@ -279,12 +283,6 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
 
 // osc event loop
 while (true) {
-
-    // stores the current node configuration
-    // which relates to the pi's placement
-    // in the grid
-    int piNodes[2];
-
     in => now;
     while (in.recv(msg)) {
         if (msg.address == "/pi") {
@@ -314,7 +312,7 @@ while (true) {
             }
 
             if (debugPrint) {
-                <<< "/n", nodeConfiguration, "" >>>;
+                <<< "/n", nodeConfiguration, piNodes[0], piNodes[1], "" >>>;
             }
         }
         if (msg.address == "/m") {
