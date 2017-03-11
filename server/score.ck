@@ -104,7 +104,7 @@ totalDuration/6.0 => dur nodeConfigIncrementTime;
 0 => int nodeConfig;
 
 0::samp => dur runningDuration;
-
+/*
 // and here we go ~*~*~*~*~*~*~*~*~*
 for (startingInc => float i; i < 1.0; runningInc +=> i) {
     Math.pow(i, exponentialModifier) => float scale;
@@ -149,7 +149,7 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
 // to make up for the offset time,
 // should be 10 seconds of silence as well
 29::second => now;
-
+*/
 // set last node
 setNode(4);
 1::second => now;

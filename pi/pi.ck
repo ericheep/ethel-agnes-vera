@@ -264,7 +264,6 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
-        <<< nodes[0], nodes[1] >>>;
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
         rightGain.gain(m[voice].nodes[nodes[1]].gain);
 
