@@ -7,6 +7,12 @@
 // entirely on the OSC sender
 
 MIAP m[3];
+MIAPOSCVis v[3];
+
+for (int i; i < 3; i++) {
+    spork ~ v[i].oscSend(m[i], i);
+}
+
 int voiceId[3];
 int voiceRunning[3];
 
@@ -121,19 +127,19 @@ m[0].nodes[24].coordinate[1] => float yCenter;
  [26, 11],
  [37, 39]] @=> int largeHexagon[][];
 
-//               9----10----11
+//               9-----*----11
 //              /             \
 //             /               \
-//           16                19
+//            *                 *
 //           /                   \
 //          /                     \
 //        22           *          26
 //          \                     /
 //           \                   /
-//            0                33
+//            *                 *
 //             \               /
 //              \             /
-//              37----38----39
+//              37-----*----39
 
 OscIn in;
 OscMsg msg;
@@ -256,6 +262,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
 
         m[voice].setPosition(coordinate);
+        v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
@@ -270,6 +277,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
 
         m[voice].setPosition(coordinate);
+        v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
         leftGain.gain(m[voice].nodes[nodes[0]].gain);
@@ -330,19 +338,19 @@ while (true) {
             if (voice == 0) {
                 spork ~ moveVoice(voice, ethelLeft, ethelRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(ethel, ethelEnv, seconds::second, 64);
+                spork ~ startVoice(ethel, ethelEnv, seconds::second, 32);
             }
             // agnes
             else if (voice == 1) {
                 spork ~ moveVoice(voice, agnesLeft, agnesRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(agnes, agnesEnv, seconds::second, 64);
+                spork ~ startVoice(agnes, agnesEnv, seconds::second, 32);
             }
             // vera
             else if (voice == 2) {
                 spork ~ moveVoice(voice, veraLeft, veraRight,
                                   seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(vera, veraEnv, seconds::second, 64);
+                spork ~ startVoice(vera, veraEnv, seconds::second, 32);
             }
 
             if (debugPrint) {

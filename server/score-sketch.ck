@@ -2,8 +2,8 @@
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.005 => float startingInc;
-0.007 => float runningInc;
+0.0050 => float startingInc;
+0.0085 => float runningInc;
 0.0035 => float codaRunningInc;
 
 3.0 => float exponentialModifier;

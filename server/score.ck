@@ -9,8 +9,8 @@ OscOut ethel;
 OscOut vera;
 
 // start it up
-agnes.dest("192.168.1.10", 12345);
 ethel.dest("192.168.1.20", 12345);
+agnes.dest("192.168.1.10", 12345);
 vera.dest( "192.168.1.30", 12345);
 
 0.1::second => now;
@@ -64,7 +64,7 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
     oscTrigger(vera,  voice, duration/second, angle, pow);
 }
 
-// compositional parameters
+// compositional parameters ~*~*~*~*~*~*~*~
 
 // few constants
 2 * pi => float TAU;
@@ -72,8 +72,8 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.005 => float startingInc;
-0.005 => float runningInc;
+0.0050 => float startingInc;
+0.0085 => float runningInc;
 0.0035 => float codaRunningInc;
 
 3.0 => float exponentialModifier;
@@ -81,8 +81,10 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 1.0/3.0 => float oneThird;
 2.0/3.0 => float twoThirds;
 
-1.5 => float powRange;
-0.5 => float powOffset;
+0.5 => float powRange;
+0.75 => float powOffset;
+
+3.0 => float rotationsPerSection;
 
 // calculate the entire length of the piece
 0::samp => dur totalDuration;
@@ -107,19 +109,22 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     scale * TAU => float scalarTau;
 
     // a range of 0.5 -> 3.0
-    scale * powRange + powOffset => float scalarPow;
+    i * powRange + powOffset => float scalarPow;
+    (scalarTau * rotationsPerSection) => float angle;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    triggerVoice(0, duration, scalarTau * scalarTau, scalarPow, 0::samp);
+    triggerVoice(0, duration, scalarPow, angle, 0::samp);
+
+    // <<< scalarPow >>>;
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
     if (scale > oneThird) {
-        spork ~ triggerVoice(1, duration, scalarTau * oneThird + scalarTau, scalarPow, duration * oneThird);
+        spork ~ triggerVoice(1, duration, scalarPow, angle * oneThird, duration * oneThird);
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
     if (scale > twoThirds) {
-        spork ~ triggerVoice(2, duration, scalarTau * twoThirds + scalarTau, scalarPow, duration * twoThirds);
+        spork ~ triggerVoice(2, duration, scalarPow, angle * twoThirds, duration * twoThirds);
     }
 
     if (nodeChange < 5) {
