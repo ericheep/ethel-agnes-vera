@@ -153,7 +153,7 @@ veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
-dac.gain(0.1);
+dac.gain(0.8;
 
 // all the sound stuff we're doing
 fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
@@ -180,11 +180,11 @@ fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
 
 fun void stretchSound(int voice, dur duration) {
     if (voice == 0) {
-        spork ~ stretch(ethel, ethelEnv, duration, 32);
+        spork ~ stretch(ethel, ethelEnv, duration, 16);
     } else if (voice == 1) {
-        spork ~ stretch(agnes, agnesEnv, duration, 32);
+        spork ~ stretch(agnes, agnesEnv, duration, 16);
     } else if (voice == 2) {
-        spork ~ stretch(vera, veraEnv, duration, 32);
+        spork ~ stretch(vera, veraEnv, duration, 16);
     }
 }
 
