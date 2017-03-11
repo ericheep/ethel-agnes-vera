@@ -1,22 +1,30 @@
-// the same script run on multiple pis
+// Eric Heep
+// March 10th, 2017
+
+// OSC reciever that generates our audio
+// and calculates the MIAP algorithm
+// this script is 'stateless', and relies
+// entirely on the OSC sender
 
 MIAP m[3];
-// MIAPOSCVis v[3];
+int voiceId[3];
+int voiceRunning[3];
 
-false => int debugPrint;
-false => int debugVis;
+// very important variable
+0 => int whichPi;
 
-// if Processing debug
-// if(debugVis) {
-//     for (0 => int i; i < m.size(); i++) {
-//         spork ~ v[i].oscSend(m[i], i);
-//     }
-// }
+// turn off for speed
+true => int debugPrint;
 
 // five rows, seven columns
 for (0 => int i; i < m.size(); i++) {
     m[i].generateGrid(7, 7);
 }
+
+// setting our center coordinates (only need to
+// pull from one, they're all the same
+m[0].nodes[24].coordinate[0] => float xCenter;
+m[0].nodes[24].coordinate[1] => float yCenter;
 
 //        *-----*-----*-----*-----*-----*-----*
 //         \   / \   / \   / \   / \   / \   / \
@@ -38,9 +46,12 @@ for (0 => int i; i < m.size(); i++) {
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
 
-// ethel
-// agnes
-// aera
+// the array below defines the speaker nodes for
+// the three Raspberry Pis
+
+// ethel [17, 23]
+// agnes [25, 18]
+// vera  [31, 32]
 
 // L, R
 [[17, 23],
@@ -132,93 +143,103 @@ in.listenAll();
 Gain left => dac.left;
 Gain right => dac.right;
 
-left.gain(0.0);
-right.gain(0.0);
+left.gain(1.0);
+right.gain(1.0);
 
 // ethel
-SndBuf ethel => ADSR ethelEnv => left;
-ethelEnv => right;
+Gain ethelLeft;
+Gain ethelRight;
+
+SndBuf ethel => WinFuncEnv ethelEnv => ethelLeft => left;
+ethelEnv => ethelRight => right;
 ethel.read(me.dir() + "../wavs/ethel.wav");
 ethel.pos(ethel.samples());
 
 // agnes
-SndBuf agnes => ADSR agnesEnv => left;
-agnesEnv => right;
+Gain agnesLeft;
+Gain agnesRight;
+
+SndBuf agnes => WinFuncEnv agnesEnv => agnesLeft => left;
+agnesEnv => agnesRight => right;
 agnes.read(me.dir() + "../wavs/agnes.wav");
 agnes.pos(agnes.samples());
 
 // vera
-SndBuf vera => ADSR veraEnv => left;
-veraEnv => right;
+Gain veraLeft;
+Gain veraRight;
+
+SndBuf vera => WinFuncEnv veraEnv => veraLeft => left;
+veraEnv => veraRight => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
-ethel.gain(0.33);
-agnes.gain(0.33);
-vera.gain(0.33);
-
-dac.gain(0.8);
+// oh yea! turn it up! (default values)
+ethel.gain(1.0);
+agnes.gain(1.0);
+vera.gain(1.0);
+dac.gain(1.0);
 
 // all the sound stuff we're doing
-fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
+fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
     duration/windows => dur grain;
     grain * 0.5 => dur halfGrain;
 
+    // for some reason if you try to put a sample
+    // at a fraction of samp, it will silence ChucK
     if (halfGrain < 1.0::samp) {
         return;
     }
 
-    env.attackTime(halfGrain);
-    env.releaseTime(halfGrain);
+    // envelope parameters
+    env.attack(halfGrain);
+    env.release(halfGrain);
 
+    halfGrain/samp => float halfGrainSamples;
     buf.samples()/windows => int sampleIncrement;
 
+    // bulk of the time stretching
     for (0 => int i; i < windows; i++) {
         buf.pos(i * sampleIncrement);
-        env.keyOn();
-        halfGrain => now;
-        env.keyOff();
-        halfGrain => now;
+
+        (i * sampleIncrement)::samp + grain => dur end;
+
+        // only fade if there will be no dicontinuity errors
+        if (end < buf.samples()::samp) {
+            env.keyOn();
+            halfGrain => now;
+            env.keyOff();
+            halfGrain => now;
+        }
     }
 }
 
-fun void stretchSound(int voice, dur duration) {
-    if (voice == 0) {
-        spork ~ stretch(ethel, ethelEnv, duration, 16);
-    } else if (voice == 1) {
-        spork ~ stretch(agnes, agnesEnv, duration, 16);
-    } else if (voice == 2) {
-        spork ~ stretch(vera, veraEnv, duration, 16);
-    }
-}
-
-m[0].nodes[24].coordinate[0] => float xCenter;
-m[0].nodes[24].coordinate[1] => float yCenter;
-
-0 => int whichPi;
 
 fun float exponentialScale(float x, float pow) {
     return Math.pow(x, pow);
 }
-
-/*0.0 => float inc;
-while (true) {
-    moveSound(0, 5.0::second, 0.5, inc);
-    1.0 +=> inc;
-}*/
 
 fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float length) {
     return [xOrigin + Math.cos(angle) * length, yOrigin + Math.sin(angle) * length];
 }
 
 // moves a sound from one end to another
-fun void moveSound(int voice, dur duration, float pow, float angle) {
-    stretchSound(voice, duration);
+fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float pow, float angle) {
 
+    // returns the id to the exit array so
+    // there is no overlapping, very experimental
+    1 => voiceRunning[voice];
+    me.id() => voiceId[voice];
+
+    // increase this maybe for less spatial
+    // resolution but more processing
     1.0::ms => dur incrementalDuration;
+
+    // the number of times we can increment and
+    // stay within the duration specified
     (duration/incrementalDuration)$int => int numIncrements;
     (numIncrements * 0.5) $int => int halfNumIncrements;
 
+    // one divide instead of like three thousand right?
     1.0/halfNumIncrements => float scalar;
 
     currentNodeConfiguration[whichPi][0] => int lNode;
@@ -230,6 +251,7 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
 
     0.5 => float radius;
 
+    // 0.0 - 0.5 in vector land
     for (halfNumIncrements => int i; i >= 0; i--) {
         exponentialScale(i * scalar, pow) => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
@@ -238,17 +260,14 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
         coordinate[1] => y;
 
         m[voice].setPosition([x, y]);
-        // if (debugVis) {
-        //     v[voice].updatePos(x, y);
-        // }
 
-        left.gain(m[voice].nodes[lNode].gain);
-        right.gain(m[voice].nodes[rNode].gain);
+        leftGain.gain(m[voice].nodes[lNode].gain);
+        rightGain.gain(m[voice].nodes[rNode].gain);
 
-        // <<< x, y >>>;
         incrementalDuration => now;
     }
 
+    // 0.5 - 1.0 in vector land
     for (0 => int i; i < halfNumIncrements; i++) {
         exponentialScale(i * scalar, pow) => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
@@ -258,16 +277,13 @@ fun void moveSound(int voice, dur duration, float pow, float angle) {
 
         m[voice].setPosition([x, y]);
 
-        // if (debugVis) {
-        //     v[voice].updatePos(x, y);
-        // }
+        leftGain.gain(m[voice].nodes[lNode].gain);
+        rightGain.gain(m[voice].nodes[rNode].gain);
 
-        left.gain(m[voice].nodes[lNode].gain);
-        right.gain(m[voice].nodes[rNode].gain);
-
-        // <<< x, y >>>;
         incrementalDuration => now;
     }
+
+    0 => voiceRunning[voice];
 }
 
 fun void shiftNode(int nodeConfig) {
@@ -293,6 +309,7 @@ float seconds[3];
 float angle[3];
 float pow[3];
 
+
 // osc event loop
 while (true) {
     in => now;
@@ -311,30 +328,31 @@ while (true) {
                 <<< "/n", nodeConfiguration, "" >>>;
             }
         }
-        if (msg.address == "/p") {
-            msg.getInt(0) => int voice;
-            msg.getFloat(1) => seconds[voice];
-            msg.getFloat(2) => angle[voice];
-            msg.getFloat(3) => pow[voice];
-
-
-            if (debugPrint) {
-                <<< "/p", "seconds: ", seconds[voice], "angle: ", angle[voice], "pow: ", pow[voice]>>>;
-            }
-        }
         if (msg.address == "/m") {
             msg.getInt(0) => int voice;
+            msg.getFloat(1) => float seconds;
+            msg.getFloat(2) => float angle;
+            msg.getFloat(3) => float pow;
 
+            // just in case
+            if (voiceRunning[voice]) {
+                Machine.remove(voiceId[voice]);
+            }
+
+            // ethel
             if (voice == 0) {
-                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+                spork ~ moveVoice(voice, ethelLeft, ethelRight, seconds::second, angle, pow);
+                spork ~ startVoice(ethel, ethelEnv, seconds::second, 32);
             }
-            if (voice == 1) {
-                0.3::ms => now;
-                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            // agnes
+            else if (voice == 1) {
+                spork ~ moveVoice(voice, agnesLeft, agnesRight, seconds::second, angle, pow);
+                spork ~ startVoice(agnes, agnesEnv, seconds::second, 32);
             }
-            if (voice == 2) {
-                0.3::ms => now;
-                spork ~ moveSound(voice, seconds[voice]::second, pow[voice], angle[voice]);
+            // vera
+            else if (voice == 2) {
+                spork ~ moveVoice(voice, veraLeft, veraRight, seconds::second, angle, pow);
+                spork ~ startVoice(vera, veraEnv, seconds::second, 32);
             }
 
             if (debugPrint) {
