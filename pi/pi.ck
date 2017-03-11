@@ -185,7 +185,7 @@ vera.pos(vera.samples());
 ethel.gain(1.0);
 agnes.gain(1.0);
 vera.gain(1.0);
-dac.gain(1.0);
+dac.gain(0.8);
 
 // all the sound stuff we're doing
 fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
@@ -253,8 +253,6 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
     float coordinate[2];
     0.0 => float expScalar;
     0.5 => float radius;
-
-    <<< nodes[0], nodes[1] >>>;
 
     // from 0.0 to center
     for (halfNumIncrements => int i; i >= 0; i--) {
@@ -354,7 +352,7 @@ while (true) {
             }
 
             if (debugPrint) {
-                <<< "/m", voice, "" >>>;
+                <<< "/m", "voice:" voice, "nodes: [", piNodes[0], piNodes[1], "]", "" >>>;
             }
         }
     }
