@@ -2,7 +2,7 @@
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.0050 => float startingInc;
+0.1000 => float startingInc;
 0.0085 => float runningInc;
 0.0035 => float codaRunningInc;
 
