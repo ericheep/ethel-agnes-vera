@@ -16,13 +16,13 @@ vera.dest( "192.168.1.30", 12345);
 0.1::second => now;
 
 // let em know who's who
-agnes.start("/pi");
-agnes.add(0);
-agnes.send();
-
 ethel.start("/pi");
-ethel.add(1);
+ethel.add(0);
 ethel.send();
+
+agnes.start("/pi");
+agnes.add(1);
+agnes.send();
 
 vera.start("/pi");
 vera.add(2);
@@ -30,13 +30,14 @@ vera.send();
 
 0.1::second => now;
 
-// few constants
-2 * pi => float TAU;
-2.5 => float POW_RANGE;
+// set first node
+setNode(0);
+
+0.1::second => now;
 
 // osc functions
-fun void oscMove(OscOut out, string addr, int voice, float seconds, float angle, float pow) {
-    out.start(addr);
+fun void oscTrigger(OscOut out, int voice, float seconds, float angle, float pow) {
+    out.start("/m");
     out.add(voice);
     out.add(seconds);
     out.add(angle);
@@ -44,74 +45,120 @@ fun void oscMove(OscOut out, string addr, int voice, float seconds, float angle,
     out.send();
 }
 
-fun void oscNodeShift(OscOut out, string addr, int shift) {
-    out.start(addr);
-    out.add(shift);
+fun void oscNodeConfiguration(OscOut out, int nodeConfig) {
+    out.start("/n");
+    out.add(nodeConfig);
     out.send();
 }
 
-fun void move(int voice, dur duration, float angle, float pow, dur offset) {
-    offset => now;
-    oscMove(agnes, "/m", voice, duration/second, angle, pow);
-    oscMove(ethel, "/m", voice, duration/second, angle, pow);
-    oscMove(vera,  "/m", voice, duration/second, angle, pow);
+fun void setNode(int nodeConfig) {
+    oscNodeConfiguration(ethel, nodeConfig);
+    oscNodeConfiguration(agnes, nodeConfig);
+    oscNodeConfiguration(vera, nodeConfig);
 }
 
-// a global for node switching
-int nodeConfiguration;
+fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offset) {
+    offset => now;
+    oscTrigger(ethel, voice, duration/second, angle, pow);
+    oscTrigger(agnes, voice, duration/second, angle, pow);
+    oscTrigger(vera,  voice, duration/second, angle, pow);
+}
 
-for (0.450 => float i; i < 1.0; 0.005 +=> i) {
-    now => time past;
-    Math.pow(i, 3) => float scale;
-    scale * 30::second => dur duration;
+// compositional parameters
+
+// few constants
+2 * pi => float TAU;
+
+30::second => dur totalIncrementTime;
+5::second => dur codaIncrementTime;
+
+0.005 => float startingInc;
+0.005 => float runningInc;
+0.0035 => float codaRunningInc;
+
+3.0 => float exponentialModifier;
+
+1.0/3.0 => float oneThird;
+2.0/3.0 => float twoThirds;
+
+1.5 => float powRange;
+0.5 => float powOffset;
+
+// calculate the entire length of the piece
+0::samp => dur totalDuration;
+for (startingInc => float i; i < 1.0; runningInc +=> i) {
+    Math.pow(i, exponentialModifier) => float scale;
+    scale * totalIncrementTime +=> totalDuration;
+}
+
+totalDuration/6.0 => dur nodeChangeIncrementTime;
+1 => int nodeChange;
+
+// and here we go ~*~*~*~*~*~*~*~*~*
+0::samp => dur runningDuration;
+for (startingInc => float i; i < 1.0; runningInc +=> i) {
+    Math.pow(i, exponentialModifier) => float scale;
+    scale * totalIncrementTime => dur duration;
+
+    // to track node changes
+    duration +=> runningDuration;
 
     // a range of 0 -> 2pi
     scale * TAU => float scalarTau;
 
     // a range of 0.5 -> 3.0
-    scale * POW_RANGE + 0.5 => float scalarPow;
+    scale * powRange + powOffset => float scalarPow;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    //move(0, duration, scalarTau * 0.0/3.0 + scalarTau, scalarPow, duration * 0.0/3.0);
+    triggerVoice(0, duration, scalarTau * scalarTau, scalarPow, 0::samp);
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
-    /*if (scale > 0.33) {
-        spork ~ move(1, duration, scalarTau * 1.0/3.0 + scalarTau, scalarPow, duration * 1.0/3.0);
+    if (scale > oneThird) {
+        spork ~ triggerVoice(1, duration, scalarTau * oneThird + scalarTau, scalarPow, duration * oneThird);
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
-    if (scale > 0.66) {
-        spork ~ move(2, duration, scalarTau * 2.0/3.0 + scalarTau, scalarPow, duration * 2.0/3.0);
-    }*/
+    if (scale > twoThirds) {
+        spork ~ triggerVoice(2, duration, scalarTau * twoThirds + scalarTau, scalarPow, duration * twoThirds);
+    }
+
+    if (nodeChange < 5) {
+        if (runningDuration > nodeChangeIncrementTime * nodeChange) {
+            <<< "Time\t:", runningDuration/minute, "\tChange to configuration:", nodeChange >>>;
+            setNode(nodeChange);
+            nodeChange++;
+        }
+    }
 
     duration => now;
 }
 
-/*
+<<< "Time\t:", runningDuration/minute, "\tMostly over now, change the 5th node when it's silent." >>>;
 
 // to make up for the offset time,
 // should be 10 seconds of silence as well
-30::second => now;
+29::second => now;
 
-// fourth formation (hexagon), speed up to nothing
-for (1.0 => float i; i > 0.0; 0.01 -=> i) {
-    Math.pow(i, 6) => float scale;
-    scale * 30::second => dur duration;
+// set last node
+setNode(5);
+1::second => now;
+
+// coda
+for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
+    Math.pow(i, exponentialModifier) => float scale;
+    scale * codaIncrementTime => dur duration;
 
     // a range of 0 -> 2pi
     scale * TAU => float scalarTau;
 
     // a range of 0.5 -> 3.0
-    scale * POW_RANGE + 0.5 => float scalarPow;
+    scale * powRange + powOffset => float scalarPow;
 
-    spork ~ move(0, duration, scalarTau * 0.0/3.0, scalarPow, duration * 0.0/3.0);
-    spork ~ move(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0);
-    spork ~ move(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0);
+    spork ~ triggerVoice(0, duration, scalarTau * 0.0/3.0, scalarPow, 0::samp);
+    spork ~ triggerVoice(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0);
+    spork ~ triggerVoice(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0);
 
     duration => now;
-
-    // breathing room
-    1::samp => now;
 }
 
-*/
+<<< "Time\t:", runningDuration/minute, "\tFin." >>>;
