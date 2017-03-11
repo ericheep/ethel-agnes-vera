@@ -62,12 +62,14 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
     oscTrigger(ethel, voice, duration/second, angle, pow);
     oscTrigger(agnes, voice, duration/second, angle, pow);
     oscTrigger(vera,  voice, duration/second, angle, pow);
+    setNode(currentNodeConfig);
 }
 
 // compositional parameters ~*~*~*~*~*~*~*~
 
-// few constants
 2 * pi => float TAU;
+
+0 => int currentNodeConfig;
 
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
@@ -84,7 +86,7 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 0.5 => float powRange;
 0.75 => float powOffset;
 
-3.0 => float rotationsPerSection;
+0.5 => float rotationsPerSection;
 
 // calculate the entire length of the piece
 0::samp => dur totalDuration;
@@ -101,19 +103,20 @@ totalDuration/6.0 => dur nodeChangeIncrementTime;
 for (startingInc => float i; i < 1.0; runningInc +=> i) {
     Math.pow(i, exponentialModifier) => float scale;
     scale * totalIncrementTime => dur duration;
+    nodeChange => currentNodeConfig;
 
     // to track node changes
     duration +=> runningDuration;
 
     // a range of 0 -> 2pi
-    scale * TAU => float scalarTau;
+    i * TAU => float linearScalarTau;
 
     // a range of 0.5 -> 3.0
     i * powRange + powOffset => float scalarPow;
-    (scalarTau * rotationsPerSection) => float angle;
+    (linearScalarTau * rotationsPerSection) => float angle;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    triggerVoice(0, duration, scalarPow, angle, 0::samp);
+    triggerVoice(0, duration, linearScalarTau, angle, 0::samp);
 
     // <<< scalarPow >>>;
 

@@ -7,10 +7,10 @@
 // entirely on the OSC sender
 
 MIAP m[3];
-// MIAPOSCVis v[3];
+MIAPOSCVis v[3];
 
 for (int i; i < 3; i++) {
-    // spork ~ v[i].oscSend(m[i], i);
+    spork ~ v[i].oscSend(m[i], i);
 }
 
 int voiceId[3];
@@ -315,10 +315,6 @@ while (true) {
             }
             if (nodeConfiguration == 4) {
                 largeHexagon[whichPi] @=> piNodes;
-            }
-
-            if (debugPrint) {
-                <<< "/n", nodeConfiguration, piNodes[0], piNodes[1], "" >>>;
             }
         }
         if (msg.address == "/m") {
