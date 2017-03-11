@@ -153,7 +153,7 @@ veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
-dac.gain(0.8;
+dac.gain(0.8);
 
 // all the sound stuff we're doing
 fun void stretch(SndBuf buf, ADSR env, dur duration, int windows) {
