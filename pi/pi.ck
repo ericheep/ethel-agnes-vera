@@ -153,6 +153,10 @@ veraEnv => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
+ethel.gain(0.33);
+agnes.gain(0.33);
+vera.gain(0.33);
+
 dac.gain(0.8);
 
 // all the sound stuff we're doing
