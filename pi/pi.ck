@@ -7,11 +7,11 @@
 // entirely on the OSC sender
 
 MIAP m[3];
-MIAPOSCVis v[3];
+// MIAPOSCVis v[3];
 
-for (int i; i < 3; i++) {
+/*for (int i; i < 3; i++) {
     spork ~ v[i].oscSend(m[i], i);
-}
+}*/
 
 int voiceId[3];
 int voiceRunning[3];
@@ -182,11 +182,11 @@ vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
 // oh yea! turn it up! (default values)
-ethel.gain(0.5);
-agnes.gain(0.5);
-vera.gain(0.5);
+ethel.gain(1.0);
+agnes.gain(1.0);
+vera.gain(1.0);
 
-dac.gain(0.9);
+dac.gain(0.8);
 
 // all the sound stuff we're doing
 fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
