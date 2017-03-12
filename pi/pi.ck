@@ -257,7 +257,7 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
 
     // from 0.0 to center
     for (halfNumIncrements => int i; i >= 0; i--) {
-        i * scala => expScalar;
+        i * scalar => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
 
         m[voice].setPosition(coordinate);
