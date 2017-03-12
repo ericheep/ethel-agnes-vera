@@ -77,9 +77,9 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.1500 => float startingInc;
-0.0085 => float runningInc;
-0.0035 => float codaRunningInc;
+0.15000 => float startingInc;
+0.00725 => float runningInc;
+0.00350 => float codaRunningInc;
 
 3.0 => float exponentialModifier;
 
@@ -89,7 +89,7 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 0.5 => float powRange;
 0.5 => float powOffset;
 
-0.25 => float rotationsPerSection;
+0.5 => float rotationsPerSection;
 pi => float angleOffset;
 
 
@@ -104,7 +104,7 @@ totalDuration/6.0 => dur nodeConfigIncrementTime;
 0 => int nodeConfig;
 
 0::samp => dur runningDuration;
-/*
+
 // and here we go ~*~*~*~*~*~*~*~*~*
 for (startingInc => float i; i < 1.0; runningInc +=> i) {
     Math.pow(i, exponentialModifier) => float scale;
@@ -114,11 +114,11 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     duration +=> runningDuration;
 
     // a range of 0 -> 2pi
-    (1.0 - i) * TAU => float linearScalarTau;
+    (1.0 - scale) * TAU => float linearScalarTau;
 
     // a range of 0.5 -> 3.0
     i * powRange + powOffset => float scalarPow;
-    angleOffset + (linearScalarTau * rotationsPerSection) => float angle;
+    (angleOffset + linearScalarTau) * rotationsPerSection => float angle;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
     triggerVoice(0, duration, linearScalarTau, angle, 0::samp, nodeConfig);
@@ -144,12 +144,13 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     duration => now;
 }
 
+/*
 <<< "Time\t:", runningDuration/minute, "\tMostly over now, change the 5th node when it's silent." >>>;
 
 // to make up for the offset time,
 // should be 10 seconds of silence as well
 29::second => now;
-*/
+
 // set last node
 setNode(4);
 1::second => now;
@@ -173,3 +174,4 @@ for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
 }
 
 <<< "Time\t:", runningDuration/minute, "\tFin." >>>;
+*/

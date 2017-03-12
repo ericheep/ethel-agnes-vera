@@ -2,9 +2,9 @@
 30::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.1000 => float startingInc;
-0.0085 => float runningInc;
-0.0035 => float codaRunningInc;
+0.10000 => float startingInc;
+0.00725 => float runningInc;
+0.00350 => float codaRunningInc;
 
 3.0 => float exponentialModifier;
 
@@ -21,7 +21,7 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     scale * totalIncrementTime +=> totalDuration;
 }
 
-totalDuration/5.0 => dur nodeChangeIncrementTime;
+totalDuration/6.0 => dur nodeChangeIncrementTime;
 
 for (startingInc => float i; i < 1.0; runningInc +=> i) {
     Math.pow(i, exponentialModifier) => float scale;
@@ -46,6 +46,7 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
     }
 }
 
+/*
 // pause
 30::second +=> runningDuration;
 
@@ -56,6 +57,7 @@ for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
     Math.pow(i, exponentialModifier) => float scale;
     scale * codaIncrementTime +=> runningDuration;
 }
+*/
 
 <<< "--", "" >>>;
 <<< "Total:", runningDuration/minute >>>;
