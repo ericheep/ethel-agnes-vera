@@ -213,12 +213,12 @@ fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
         (i * sampleIncrement)::samp + grain => dur end;
 
         // only fade if there will be no discontinuity errors
-        if (end < buf.samples()::samp) {
+        //jif (end < buf.samples()::samp) {
             env.keyOn();
             halfGrain => now;
             env.keyOff();
             halfGrain => now;
-        }
+        //}
     }
 }
 
