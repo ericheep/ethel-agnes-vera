@@ -301,6 +301,7 @@ while (true) {
         }
         if (msg.address == "/n") {
             msg.getInt(0) => int nodeConfiguration;
+            msg.getInt(1) => int whichPi;
 
             if (nodeConfiguration == 0) {
                 smallHexagon[whichPi] @=> piNodes;

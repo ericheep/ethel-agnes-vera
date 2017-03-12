@@ -48,17 +48,18 @@ fun void oscTrigger(OscOut out, int voice, float seconds, float angle, float pow
     out.send();
 }
 
-fun void oscNodeConfiguration(OscOut out, int nodeConfig) {
+fun void oscNodeConfiguration(OscOut out, int nodeConfig, int whichPi) {
     out.start("/n");
     out.add(nodeConfig);
+    out.add(whichPi);
     out.send();
 }
 
 fun void setNode(int nodeConfig) {
-    oscNodeConfiguration(local, nodeConfig);
-    oscNodeConfiguration(ethel, nodeConfig);
-    oscNodeConfiguration(agnes, nodeConfig);
-    oscNodeConfiguration(vera, nodeConfig);
+    oscNodeConfiguration(local, nodeConfig, 0);
+    oscNodeConfiguration(ethel, nodeConfig, 0);
+    oscNodeConfiguration(agnes, nodeConfig, 1);
+    oscNodeConfiguration(vera, nodeConfig, 2);
 }
 
 fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offset, int nodeConfig) {
