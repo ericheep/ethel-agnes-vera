@@ -75,14 +75,11 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 
 2 * pi => float TAU;
 
-30::second => dur totalIncrementTime;
-5::second => dur codaIncrementTime;
+4::second => dur totalIncrementTime;
 
-0.15000 => float startingInc;
-0.00725 => float runningInc;
-0.00350 => float codaRunningInc;
+0.0015 => float runningInc;
 
-3.0 => float exponentialModifier;
+4.0 => float exponentialModifier;
 
 1.0/3.0 => float oneThird;
 2.0/3.0 => float twoThirds;
@@ -93,21 +90,28 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 0.5 => float rotationsPerSection;
 pi => float angleOffset;
 
-
 // calculate the entire length of the piece
 0::samp => dur totalDuration;
-for (startingInc => float i; i < 1.0; runningInc +=> i) {
+
+for (1.0 => float i; i > 0.0; runningInc -=> i) {
     Math.pow(i, exponentialModifier) => float scale;
-    scale * totalIncrementTime +=> totalDuration;
+    scale * totalIncrementTime => dur duration;
+    duration +=> totalDuration;
 }
 
-totalDuration/6.0 => dur nodeConfigIncrementTime;
-0 => int nodeConfig;
+totalDuration * 2 => totalDuration;
 
+totalDuration/6.0 => dur nodeConfigIncrementTime;
+totalDuration/4.0 => dur voiceAddIncrementTime;
+
+1 => int nodeConfig;
 0::samp => dur runningDuration;
 
+0 => int firstVoiceLatch;
+0 => int secondVoiceLatch;
+
 // and here we go ~*~*~*~*~*~*~*~*~*
-for (startingInc => float i; i < 1.0; runningInc +=> i) {
+for (1.0 => float i; i > 0.0; runningInc -=> i) {
     Math.pow(i, exponentialModifier) => float scale;
     scale * totalIncrementTime => dur duration;
 
@@ -123,56 +127,37 @@ for (startingInc => float i; i < 1.0; runningInc +=> i) {
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
     triggerVoice(0, duration, linearScalarTau, angle, 0::samp, nodeConfig);
+    duration => now;
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
-    if (scale > oneThird) {
-        spork ~ triggerVoice(1, duration, scalarPow, angle * oneThird, duration * oneThird, nodeConfig);
+    if (runningDuration > (voiceAddIncrementTime * 1)) {
+        if (firstVoiceLatch == 0) {
+            1 => firstVoiceLatch;
+            <<< "Voice Two Added", "" >>>;
+        }
+        triggerVoice(1, duration, scalarPow, angle * oneThird, 0::samp, nodeConfig);
+        duration => now;
+        duration +=> runningDuration;
     }
 
     // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
-    if (scale > twoThirds) {
-        spork ~ triggerVoice(2, duration, scalarPow, angle * twoThirds, duration * twoThirds, nodeConfig);
+    if (runningDuration > (voiceAddIncrementTime * 2)) {
+        if (secondVoiceLatch == 0) {
+            1 => secondVoiceLatch;
+            <<< "Voice Three Added", "" >>>;
+        }
+        triggerVoice(2, duration, scalarPow, angle * twoThirds, 0::samp, nodeConfig);
+        duration => now;
+        duration +=> runningDuration;
     }
 
     if (nodeConfig < 5) {
-        if (runningDuration > nodeConfigIncrementTime * (nodeConfig + 1)) {
-            <<< "Time\t:", runningDuration/minute, "\tChange to configuration:", nodeConfig >>>;
+        if (runningDuration > nodeConfigIncrementTime * nodeConfig) {
+            <<< "Time:\t", runningDuration/minute, "\tChange to configuration:", nodeConfig >>>;
             setNode(nodeConfig);
             nodeConfig++;
         }
     }
-
-    duration => now;
 }
 
-/*
-<<< "Time\t:", runningDuration/minute, "\tMostly over now, change the 5th node when it's silent." >>>;
-
-// to make up for the offset time,
-// should be 10 seconds of silence as well
-29::second => now;
-
-// set last node
-setNode(4);
-1::second => now;
-
-// coda
-for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
-    Math.pow(i, exponentialModifier) => float scale;
-    scale * codaIncrementTime => dur duration;
-
-    // a range of 0 -> 2pi
-    scale * TAU => float scalarTau;
-
-    // a range of 0.5 -> 3.0
-    scale * powRange + powOffset => float scalarPow;
-
-    spork ~ triggerVoice(0, duration, scalarTau * 0.0/3.0, scalarPow, 0::samp, nodeConfig);
-    spork ~ triggerVoice(1, duration, scalarTau * 1.0/3.0, scalarPow, duration * 1.0/3.0, nodeConfig);
-    spork ~ triggerVoice(2, duration, scalarTau * 2.0/3.0, scalarPow, duration * 2.0/3.0, nodeConfig);
-
-    duration => now;
-}
-
-<<< "Time\t:", runningDuration/minute, "\tFin." >>>;
-*/
+<<< "Total:\t", runningDuration/minute, "" >>>;

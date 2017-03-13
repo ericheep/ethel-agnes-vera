@@ -1,63 +1,68 @@
-0::samp => dur runningDuration;
-30::second => dur totalIncrementTime;
+4::second => dur totalIncrementTime;
 5::second => dur codaIncrementTime;
 
-0.10000 => float startingInc;
-0.00725 => float runningInc;
-0.00350 => float codaRunningInc;
+0.0015 => float runningInc;
 
-3.0 => float exponentialModifier;
+4.0 => float exponentialModifier;
 
 1.0/3.0 => float oneThird;
 2.0/3.0 => float twoThirds;
+
 0 => int oneThirdLatch;
 0 => int twoThirdsLatch;
-1 => int nodeChange;
+0 => int nodeChange;
 
 // calculate the entire length of the piece
 0::samp => dur totalDuration;
-for (startingInc => float i; i < 1.0; runningInc +=> i) {
+
+for (1.0 => float i; i > 0.0; runningInc -=> i) {
     Math.pow(i, exponentialModifier) => float scale;
-    scale * totalIncrementTime +=> totalDuration;
+    scale * totalIncrementTime => dur duration;
+    duration +=> totalDuration;
 }
 
+totalDuration * 2 => totalDuration;
+
+0 => oneThirdLatch;
+0 => twoThirdsLatch;
+
 totalDuration/6.0 => dur nodeChangeIncrementTime;
+totalDuration/4.0 => dur voiceAddIncrementTime;
 
-for (startingInc => float i; i < 1.0; runningInc +=> i) {
+0::samp => dur runningDuration;
+for (1.0 => float i; i > 0.0; runningInc -=> i) {
     Math.pow(i, exponentialModifier) => float scale;
-    scale * totalIncrementTime +=> runningDuration;
+    scale * totalIncrementTime => dur duration;
 
-    if (scale > oneThird && oneThirdLatch != 1) {
-        1 => oneThirdLatch;
-        <<< "Second Voice:\t", runningDuration/minute >>>;
+    // first voice
+    duration +=> runningDuration;
+
+    if (runningDuration > voiceAddIncrementTime * 1) {
+        // second voice
+        duration +=> runningDuration;
+        if (oneThirdLatch == 0) {
+            <<< "Second Voice:\t", runningDuration/minute >>>;
+            1 => oneThirdLatch;
+        }
     }
 
-    if (scale > twoThirds && twoThirdsLatch != 1) {
-        1 => twoThirdsLatch;
-        <<< "Third Voice:\t", runningDuration/minute >>>;
+    if (runningDuration > voiceAddIncrementTime * 2) {
+        // third voice
+        duration +=> runningDuration;
+        if (twoThirdsLatch == 0) {
+            <<< "Third Voice:\t", runningDuration/minute >>>;
+            1 => twoThirdsLatch;
+        }
     }
 
     // only want 4 node changes in the first section
-    if (nodeChange < 5) {
+    if (nodeChange < 4) {
         if (runningDuration > nodeChangeIncrementTime * nodeChange) {
             <<< "Node Change:\t", runningDuration/minute, "\t", nodeChange >>>;
             nodeChange++;
         }
     }
 }
-
-/*
-// pause
-30::second +=> runningDuration;
-
-<<< "Coda Begins:\t", runningDuration/minute >>>;
-<<< "Node Change:\t", runningDuration/minute, "\t", nodeChange >>>;
-
-for (1.0 => float i; i > 0.0; codaRunningInc -=> i) {
-    Math.pow(i, exponentialModifier) => float scale;
-    scale * codaIncrementTime +=> runningDuration;
-}
-*/
 
 <<< "--", "" >>>;
 <<< "Total:", runningDuration/minute >>>;
