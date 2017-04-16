@@ -13,8 +13,8 @@ public class SndBufStretch extends Chubgraph {
 
     SndBuf snd => ADSR env => outlet;
 
-    32  => int m_grains;
-    1.0/m_grains => float m_inverseGrains;
+    32              => int m_grains;
+    1.0/m_grains    => float m_inverseGrains;
 
     0   => int m_samples;
     0.0 => float m_sampleIncrement;
@@ -24,11 +24,19 @@ public class SndBufStretch extends Chubgraph {
     0::samp => dur m_halfGrainLength;
     0::samp => dur m_endGrainLength;
 
+
     0::samp => dur m_endPosition;
+    fun void pos(int s) {
+        snd.pos(s);
+    }
 
     fun void read(string path) {
         snd.read(path);
         snd.samples() => m_samples;
+    }
+
+    fun int samples() {
+        return snd.samples();
     }
 
     fun void grains(int g) {
@@ -81,11 +89,12 @@ public class SndBufStretch extends Chubgraph {
     }
 }
 
+/*
 SndBufStretch s => dac;
 
-s.read("../wavs/ethel.wav");
+s.read("../wavs/vera.wav");
 s.grains(64);
 while (true) {
-    s.stretch(10.825::second);
+    s.stretch(30.825::second);
 }
-
+*/
