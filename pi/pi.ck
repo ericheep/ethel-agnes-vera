@@ -1,5 +1,5 @@
 // Eric Heep
-// March 10th, 2017
+// April 15th, 2017
 
 // OSC reciever that generates our audio
 // and calculates the MIAP algorithm
@@ -33,8 +33,8 @@ for (0 => int i; i < m.size(); i++) {
 
 // setting our center coordinates (only need to
 // pull from one, they're all the same
-m[0].nodes[24].coordinate[0] => float xCenter;
-m[0].nodes[24].coordinate[1] => float yCenter;
+m[0].nodeX(24) => float xCenter;
+m[0].nodeY(24) => float yCenter;
 
 //        *-----*-----*-----*-----*-----*-----*
 //         \   / \   / \   / \   / \   / \   / \
@@ -158,8 +158,8 @@ right.gain(1.0);
 Gain ethelLeft;
 Gain ethelRight;
 
-SndBuf ethel => WinFuncEnv ethelEnv => ethelLeft => left;
-ethelEnv => ethelRight => right;
+SndBufStretch ethel => ethelLeft => left;
+ethel => ethelRight => right;
 ethel.read(me.dir() + "../wavs/ethel.wav");
 ethel.pos(ethel.samples());
 
@@ -167,8 +167,8 @@ ethel.pos(ethel.samples());
 Gain agnesLeft;
 Gain agnesRight;
 
-SndBuf agnes => WinFuncEnv agnesEnv => agnesLeft => left;
-agnesEnv => agnesRight => right;
+SndBufStretch agnes => agnesLeft => left;
+agnes => agnesRight => right;
 agnes.read(me.dir() + "../wavs/agnes.wav");
 agnes.pos(agnes.samples());
 
@@ -176,8 +176,8 @@ agnes.pos(agnes.samples());
 Gain veraLeft;
 Gain veraRight;
 
-SndBuf vera => WinFuncEnv veraEnv => veraLeft => left;
-veraEnv => veraRight => right;
+SndBufStretch vera => veraLeft => left;
+vera => veraRight => right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
@@ -188,41 +188,6 @@ vera.gain(1.0);
 
 dac.gain(0.8);
 
-// all the sound stuff we're doing
-fun void startVoice(SndBuf buf, WinFuncEnv env, dur duration, int windows) {
-    duration/windows => dur grain;
-    grain * 0.5 => dur halfGrain;
-
-    // for some reason if you try to put a sample
-    // at a fraction of samp, it will silence ChucK
-    if (halfGrain < 1.0::samp) {
-        return;
-    }
-
-    // envelope parameters
-    env.attack(halfGrain);
-    env.release(halfGrain);
-
-    halfGrain/samp => float halfGrainSamples;
-    buf.samples()/windows => int sampleIncrement;
-
-    // bulk of the time stretching
-    for (0 => int i; i < windows; i++) {
-        buf.pos(i * sampleIncrement);
-
-        (i * sampleIncrement)::samp + grain => dur end;
-
-        // only fade if there will be no discontinuity errors
-        //jif (end < buf.samples()::samp) {
-            env.keyOn();
-            halfGrain => now;
-            env.keyOff();
-            halfGrain => now;
-        //}
-    }
-}
-
-
 fun float exponentialScale(float x, float pow) {
     return Math.pow(x, pow);
 }
@@ -232,7 +197,7 @@ fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float le
 }
 
 // moves a sound from one end to another
-fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float pow, float angle, int nodes[]) {
+fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float angle, int nodes[]) {
 
     // returns the id to the exit array so
     // there is no overlapping, very experimental
@@ -260,12 +225,12 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         i * scalar => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
 
-        m[voice].setPosition(coordinate);
+        m[voice].position(coordinate[0], coordinate[1]);
         // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
-        leftGain.gain(m[voice].nodes[nodes[0]].gain);
-        rightGain.gain(m[voice].nodes[nodes[1]].gain);
+        leftGain.gain(m[voice].nodeValue(nodes[0]));
+        rightGain.gain(m[voice].nodeValue(nodes[1]));
 
         incrementalDuration => now;
     }
@@ -275,12 +240,12 @@ fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float
         i * scalar => expScalar;
         vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
 
-        m[voice].setPosition(coordinate);
+        m[voice].position(coordinate[0], coordinate[1]);
         // v[voice].updatePos(coordinate[0], coordinate[1]);
 
         // adjust the proper gain UGens
-        leftGain.gain(m[voice].nodes[nodes[0]].gain);
-        rightGain.gain(m[voice].nodes[nodes[1]].gain);
+        leftGain.gain(m[voice].nodeValue(nodes[0]));
+        rightGain.gain(m[voice].nodeValue(nodes[1]));
 
         incrementalDuration => now;
     }
@@ -323,7 +288,6 @@ while (true) {
             msg.getInt(0) => int voice;
             msg.getFloat(1) => float seconds;
             msg.getFloat(2) => float angle;
-            msg.getFloat(3) => float pow;
 
             // just in case
             if (voiceRunning[voice]) {
@@ -333,20 +297,20 @@ while (true) {
             // ethel
             if (voice == 0) {
                 spork ~ moveVoice(voice, ethelLeft, ethelRight,
-                                  seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(ethel, ethelEnv, seconds::second, 32);
+                                  seconds::second, angle, piNodes);
+                spork ~ ethel.stretch(seconds::second);
             }
             // agnes
             else if (voice == 1) {
                 spork ~ moveVoice(voice, agnesLeft, agnesRight,
-                                  seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(agnes, agnesEnv, seconds::second, 32);
+                                  seconds::second, angle, piNodes);
+                spork ~ agnes.stretch(seconds::second);
             }
             // vera
             else if (voice == 2) {
                 spork ~ moveVoice(voice, veraLeft, veraRight,
-                                  seconds::second, angle, pow, piNodes);
-                spork ~ startVoice(vera, veraEnv, seconds::second, 32);
+                                  seconds::second, angle, piNodes);
+                spork ~ vera.stretch(seconds::second);
             }
 
             if (debugPrint) {
