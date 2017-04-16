@@ -39,12 +39,11 @@ setNode(0);
 0.1::second => now;
 
 // osc functions
-fun void oscTrigger(OscOut out, int voice, float seconds, float angle, float pow) {
+fun void oscTrigger(OscOut out, int voice, float seconds, float angle) {
     out.start("/m");
     out.add(voice);
     out.add(seconds);
     out.add(angle);
-    out.add(pow);
     out.send();
 }
 
@@ -62,18 +61,17 @@ fun void setNode(int nodeConfig) {
     oscNodeConfiguration(vera, nodeConfig, 2);
 }
 
-fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offset, int nodeConfig) {
-    offset => now;
-    oscTrigger(local, voice, duration/second, angle, pow);
-    oscTrigger(ethel, voice, duration/second, angle, pow);
-    oscTrigger(agnes, voice, duration/second, angle, pow);
-    oscTrigger(vera,  voice, duration/second, angle, pow);
+fun void triggerVoice(int voice, dur duration, float angle, int nodeConfig) {
+    oscTrigger(local, voice, duration/second, angle);
+    oscTrigger(ethel, voice, duration/second, angle);
+    oscTrigger(agnes, voice, duration/second, angle);
+    oscTrigger(vera,  voice, duration/second, angle);
     setNode(nodeConfig);
 }
 
 // compositional parameters ~*~*~*~*~*~*~*~
 
-2 * pi => float TAU;
+2.0 * pi => float TAU;
 
 4::second => dur totalIncrementTime;
 
@@ -83,9 +81,6 @@ fun void triggerVoice(int voice, dur duration, float angle, float pow, dur offse
 
 1.0/3.0 => float oneThird;
 2.0/3.0 => float twoThirds;
-
-0.5 => float powRange;
-0.5 => float powOffset;
 
 0.5 => float rotationsPerSection;
 pi => float angleOffset;
@@ -120,13 +115,10 @@ for (1.0 => float i; i > 0.0; runningInc -=> i) {
 
     // a range of 0 -> 2pi
     (1.0 - scale) * TAU => float linearScalarTau;
-
-    // a range of 0.5 -> 3.0
-    i * powRange + powOffset => float scalarPow;
     (angleOffset + linearScalarTau) * rotationsPerSection => float angle;
 
     // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    triggerVoice(0, duration, linearScalarTau, angle, 0::samp, nodeConfig);
+    triggerVoice(0, duration, angle, nodeConfig);
     duration => now;
 
     // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
@@ -135,7 +127,7 @@ for (1.0 => float i; i > 0.0; runningInc -=> i) {
             1 => firstVoiceLatch;
             <<< "Voice Two Added", "" >>>;
         }
-        triggerVoice(1, duration, scalarPow, angle * oneThird, 0::samp, nodeConfig);
+        triggerVoice(1, duration, angle * oneThird, nodeConfig);
         duration => now;
         duration +=> runningDuration;
     }
@@ -146,7 +138,7 @@ for (1.0 => float i; i > 0.0; runningInc -=> i) {
             1 => secondVoiceLatch;
             <<< "Voice Three Added", "" >>>;
         }
-        triggerVoice(2, duration, scalarPow, angle * twoThirds, 0::samp, nodeConfig);
+        triggerVoice(2, duration, angle * twoThirds, nodeConfig);
         duration => now;
         duration +=> runningDuration;
     }
