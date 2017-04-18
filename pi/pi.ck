@@ -147,19 +147,12 @@ OscMsg msg;
 12345 => in.port;
 in.listenAll();
 
-// sound stuff
-Gain left => dac.left;
-Gain right => dac.right;
-
-left.gain(1.0);
-right.gain(1.0);
-
 // ethel
 Gain ethelLeft;
 Gain ethelRight;
 
-SndBufStretch ethel => ethelLeft => left;
-ethel => ethelRight => right;
+SndBufStretch ethel => ethelLeft => dac.left;
+ethel => ethelRight => dac.right;
 ethel.read(me.dir() + "../wavs/ethel.wav");
 ethel.pos(ethel.samples());
 
@@ -167,8 +160,8 @@ ethel.pos(ethel.samples());
 Gain agnesLeft;
 Gain agnesRight;
 
-SndBufStretch agnes => agnesLeft => left;
-agnes => agnesRight => right;
+SndBufStretch agnes => agnesLeft => dac.left;
+agnes => agnesRight => dac.right;
 agnes.read(me.dir() + "../wavs/agnes.wav");
 agnes.pos(agnes.samples());
 
@@ -176,8 +169,8 @@ agnes.pos(agnes.samples());
 Gain veraLeft;
 Gain veraRight;
 
-SndBufStretch vera => veraLeft => left;
-vera => veraRight => right;
+SndBufStretch vera => veraLeft => dac.left;
+vera => veraRight => dac.right;
 vera.read(me.dir() + "../wavs/vera.wav");
 vera.pos(vera.samples());
 
@@ -187,10 +180,6 @@ agnes.gain(1.0);
 vera.gain(1.0);
 
 dac.gain(0.8);
-
-fun float exponentialScale(float x, float pow) {
-    return Math.pow(x, pow);
-}
 
 fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float length) {
     return [xOrigin + Math.cos(angle) * length, yOrigin + Math.sin(angle) * length];
@@ -296,20 +285,17 @@ while (true) {
 
             // ethel
             if (voice == 0) {
-                spork ~ moveVoice(voice, ethelLeft, ethelRight,
-                                  seconds::second, angle, piNodes);
+                spork ~ moveVoice(voice, ethelLeft, ethelRight, seconds::second, angle, piNodes);
                 spork ~ ethel.stretch(seconds::second);
             }
             // agnes
             else if (voice == 1) {
-                spork ~ moveVoice(voice, agnesLeft, agnesRight,
-                                  seconds::second, angle, piNodes);
+                spork ~ moveVoice(voice, agnesLeft, agnesRight, seconds::second, angle, piNodes);
                 spork ~ agnes.stretch(seconds::second);
             }
             // vera
             else if (voice == 2) {
-                spork ~ moveVoice(voice, veraLeft, veraRight,
-                                  seconds::second, angle, piNodes);
+                spork ~ moveVoice(voice, veraLeft, veraRight, seconds::second, angle, piNodes);
                 spork ~ vera.stretch(seconds::second);
             }
 
