@@ -1,155 +1,127 @@
 // Eric Heep
-// March 10th, 2017
+// April 17th, 2017
 
-// OSC sender that controls the piece,
-// essenctially the score of the piece
-
-OscOut agnes;
-OscOut ethel;
-OscOut vera;
-OscOut local;
-
-local.dest("127.0.0.1", 12345);
-
-// start it up
-ethel.dest("192.168.1.20", 12345);
-agnes.dest("192.168.1.10", 12345);
-vera.dest( "192.168.1.30", 12345);
-
-0.1::second => now;
-
-// let em know who's who
-ethel.start("/pi");
-ethel.add(0);
-ethel.send();
-
-agnes.start("/pi");
-agnes.add(1);
-agnes.send();
-
-vera.start("/pi");
-vera.add(2);
-vera.send();
-
-0.1::second => now;
-
-// set first node
-setNode(0);
-
-0.1::second => now;
-
-// osc functions
-fun void oscTrigger(OscOut out, int voice, float seconds, float angle) {
-    out.start("/m");
-    out.add(voice);
-    out.add(seconds);
-    out.add(angle);
-    out.send();
-}
-
-fun void oscNodeConfiguration(OscOut out, int nodeConfig, int whichPi) {
-    out.start("/n");
-    out.add(nodeConfig);
-    out.add(whichPi);
-    out.send();
-}
-
-fun void setNode(int nodeConfig) {
-    oscNodeConfiguration(local, nodeConfig, 0);
-    oscNodeConfiguration(ethel, nodeConfig, 0);
-    oscNodeConfiguration(agnes, nodeConfig, 1);
-    oscNodeConfiguration(vera, nodeConfig, 2);
-}
-
-fun void triggerVoice(int voice, dur duration, float angle, int nodeConfig) {
-    oscTrigger(local, voice, duration/second, angle);
-    oscTrigger(ethel, voice, duration/second, angle);
-    oscTrigger(agnes, voice, duration/second, angle);
-    oscTrigger(vera,  voice, duration/second, angle);
-    setNode(nodeConfig);
-}
-
-// compositional parameters ~*~*~*~*~*~*~*~
-
+3 => int NUM_PIS;
 2.0 * pi => float TAU;
 
-4::second => dur totalIncrementTime;
+OscOut out[NUM_PIS];
+0.1::second => now;
 
-0.0015 => float runningInc;
+// ethel agnes vera
+["10.0.0.10", "10.0.0.20", "10.0.0.30"] @=> string ip[];
 
-4.0 => float exponentialModifier;
+// init
+for (0 => int i; i < NUM_PIS; i++) {
+    out[i].dest(ip[i], 12345);
+    0.1::second => now;
 
-1.0/3.0 => float oneThird;
-2.0/3.0 => float twoThirds;
-
-0.5 => float rotationsPerSection;
-pi => float angleOffset;
-
-// calculate the entire length of the piece
-0::samp => dur totalDuration;
-
-for (1.0 => float i; i > 0.0; runningInc -=> i) {
-    Math.pow(i, exponentialModifier) => float scale;
-    scale * totalIncrementTime => dur duration;
-    duration +=> totalDuration;
+    out[i].start("/pi");
+    out[i].add(i);
+    out[i].send();
 }
 
-totalDuration * 2 => totalDuration;
-
-totalDuration/6.0 => dur nodeConfigIncrementTime;
-totalDuration/4.0 => dur voiceAddIncrementTime;
-
-1 => int nodeConfig;
-0::samp => dur runningDuration;
-
-0 => int firstVoiceLatch;
-0 => int secondVoiceLatch;
-
-// and here we go ~*~*~*~*~*~*~*~*~*
-for (1.0 => float i; i > 0.0; runningInc -=> i) {
-    Math.pow(i, exponentialModifier) => float scale;
-    scale * totalIncrementTime => dur duration;
-
-    // to track node changes
-    duration +=> runningDuration;
-
-    // a range of 0 -> 2pi
-    (1.0 - scale) * TAU => float linearScalarTau;
-    (angleOffset + linearScalarTau) * rotationsPerSection => float angle;
-
-    // first voice begins, first formation (hexagon), gradual slowdown, rotation, and curve
-    triggerVoice(0, duration, angle, nodeConfig);
-    duration => now;
-
-    // second voice begins/ second formation (zigzag), still gradual slowdown, rotation, and curve
-    if (runningDuration > (voiceAddIncrementTime * 1)) {
-        if (firstVoiceLatch == 0) {
-            1 => firstVoiceLatch;
-            <<< "Voice Two Added", "" >>>;
-        }
-        triggerVoice(1, duration, angle * oneThird, nodeConfig);
-        duration => now;
-        duration +=> runningDuration;
-    }
-
-    // third voice begins/ third formation (rectangle), still gradual slowdown, rotation, and curve
-    if (runningDuration > (voiceAddIncrementTime * 2)) {
-        if (secondVoiceLatch == 0) {
-            1 => secondVoiceLatch;
-            <<< "Voice Three Added", "" >>>;
-        }
-        triggerVoice(2, duration, angle * twoThirds, nodeConfig);
-        duration => now;
-        duration +=> runningDuration;
-    }
-
-    if (nodeConfig < 5) {
-        if (runningDuration > nodeConfigIncrementTime * nodeConfig) {
-            <<< "Time:\t", runningDuration/minute, "\tChange to configuration:", nodeConfig >>>;
-            setNode(nodeConfig);
-            nodeConfig++;
-        }
+// osc functions
+fun void triggerVoice(int v, dur l, float a) {
+    for (0 => int i; i < NUM_PIS; i++) {
+        out[i].start("/t");
+        out[i].add(v);
+        out[i].add(l/second);
+        out[i].add(a);
+        out[i].send();
     }
 }
 
-<<< "Total:\t", runningDuration/minute, "" >>>;
+fun void setNode(int spkr, int ID, dur t) {
+    for (0 => int i; i < NUM_PIS; i++) {
+        out[i].start("/n");
+        out[i].add(spkr);
+        out[i].add(ID);
+        out[i].add(t/second);
+        out[i].send();
+    }
+}
+
+// math functions
+fun dur exponentialInterpolation(int i, int n, dur l) {
+    1.0/n => float inverseN;
+    l * inverseN => dur division;
+
+    Math.pow(Math.pow(1 + n, inverseN), i) - 1 => float x;
+    Math.pow(Math.pow(1 + n, inverseN), i + 1) - 1 => float y;
+
+    return y * division - x * division;
+}
+
+fun float angleRotation(int i, int n, int r) {
+    return (i/(n$float) * r * TAU) % TAU;
+}
+
+// score functions
+
+fun void nodeChanges(dur transition, dur rest) {
+    0 => int count;
+    0 => int spkr;
+    while (true) {
+        rest => now;
+        setNode(spkr, ID, transition);
+        transition => now;
+        (spkr + 1) % 6 => spkr;
+    }
+}
+
+fun void monophonicCircling(dur l, int n) {
+    now => time start;
+
+    0::samp => dur length;
+    0::samp => dur currentTime;
+    0.0 => float angle;
+    0 => int mod;
+
+    l * 0.25 => dur quarter;
+    l * 0.50 => dur half;
+
+    for (0 => int i; i < n; i++) {
+        exponentialInterpolation(i, n, l) => length;
+        angleRotation(i, n, 3) => angle;
+
+        now - start => currentTime;
+
+        if (currentTime < quarter) {
+            0 => mod;
+        } else if (currentTime < half) {
+            i % 2 => mod;
+        } else {
+            i % 3 => mod;
+        }
+
+        // triggerVoice(mod, length, angle + mod * 1.0/3.0 * TAU);
+        length => now;
+    }
+}
+
+fun void polyphonicCircling(dur l, int n) {
+
+    0::samp => dur length;
+    0.0 => float angle;
+
+    for (n - 1 => int i; i >= 0; i--) {
+        exponentialInterpolation(i, n, l) => length;
+        angleRotation(i, n, 3) => angle;
+
+        // triggerVoice(0, length, angle);
+        // triggerVoice(1, length, (angle + (1.0/3.0) * TAU) % TAU);
+        // triggerVoice(2, length, (angle + (2.0/3.0) * TAU) % TAU);
+    }
+}
+
+// ~ score
+
+spork ~ nodeChanges(30::second, 30::second);
+
+// first section
+monophonicCircling(5::second, 50);
+
+// second section
+polyphonicCircling(8::minute, 20);
+
+
