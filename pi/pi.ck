@@ -1,5 +1,5 @@
 // Eric Heep
-// April 15th, 2017
+// April 19th, 2017
 
 // OSC reciever that generates our audio
 // and calculates the MIAP algorithm
@@ -56,96 +56,18 @@ m[0].nodeY(24) => float yCenter;
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
 
-// the array below defines the speaker nodes for
-// the three Raspberry Pis
-
-// for example:
-// ethel [17, 23]
-// agnes [25, 18]
-// vera  [31, 32]
-
-// L, R
-[[17, 23],
- [25, 18],
- [31, 32]] @=> int smallHexagon[][];
-
-//               17----18
-//               /       \
-//              /         \
-//            23     *    25
-//              \         /
-//               \       /
-//               31----32
-
-// L, R
-[[16, 23],
- [25, 17],
- [32, 33]] @=> int triangles[][];
-
-//         16----17
-//          \    /
-//           \  /
-//            23     *    25
-//                        / \
-//                       /   \
-//                     32----33
-
-// L, R
-[[17, 22],
- [26, 25],
- [23, 32]] @=> int heartbeat[][];
-
-//               17
-//               / \
-//              /   \
-//      22----23     *    25----26
-//                    \   /
-//                     \ /
-//                     32
-
-// L, R
-[[17, 22],
- [26, 11],
- [37, 32]] @=> int bowtie[][];
-
-//                         11
-//                         / \
-//                        /   \
-//                17-----*     *
-//                /             \
-//               /               \
-//       22-----*     *     *----26
-//         \               /
-//          \             /
-//           *     *----32
-//            \   /
-//             \ /
-//             37
-
-// L, R
-[[ 9, 22],
- [26, 11],
- [37, 39]] @=> int largeHexagon[][];
-
-//               9-----*----11
-//              /             \
-//             /               \
-//            *                 *
-//           /                   \
-//          /                     \
-//        22           *          26
-//          \                     /
-//           \                   /
-//            *                 *
-//             \               /
-//              \             /
-//              37-----*----39
-
 OscIn in;
 OscMsg msg;
 
 12345 => in.port;
 in.listenAll();
+
+Gain spkr[2];
+SndBufStretch voice[3];
+
+voice[0].read("../wavs/ethel.wav");
+voice[1].read("../wavs/agnes.wav");
+voice[2].read("../wavs/vera.wav");
 
 // ethel
 Gain ethelLeft;

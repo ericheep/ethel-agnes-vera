@@ -3,7 +3,7 @@
 
 // starts up the pi
 
-Machine.add(me.dir() + "/pi/SndBufStretch.ck");
+Machine.add(me.dir() + "SndBufStretch.ck");
 // Machine.add(me.dir() + "/panning-classes/MIAPOSCVis.ck");
-Machine.add(me.dir() + "/pi/pi-refactor.ck");
+Machine.add(me.dir() + "pi-refactor.ck");
 

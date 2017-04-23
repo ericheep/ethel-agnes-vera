@@ -1,6 +1,8 @@
 // Eric Heep
 // April 17th, 2017
 
+NodeConfigurations nodeConfig;
+
 3 => int NUM_PIS;
 2.0 * pi => float TAU;
 
@@ -20,6 +22,7 @@ for (0 => int i; i < NUM_PIS; i++) {
     out[i].send();
 }
 
+
 // osc functions
 fun void triggerVoice(int v, dur l, float a) {
     for (0 => int i; i < NUM_PIS; i++) {
@@ -31,15 +34,27 @@ fun void triggerVoice(int v, dur l, float a) {
     }
 }
 
-fun void setNode(int spkr, int ID, dur t) {
+
+fun void setNode(int spkr, int ID) {
     for (0 => int i; i < NUM_PIS; i++) {
-        out[i].start("/n");
+        out[i].start("/setNode");
         out[i].add(spkr);
         out[i].add(ID);
-        out[i].add(t/second);
         out[i].send();
     }
 }
+
+
+fun void switchNode(int spkr, int ID, dur l) {
+    for (0 => int i; i < NUM_PIS; i++) {
+        out[i].start("/switchNode");
+        out[i].add(spkr);
+        out[i].add(ID);
+        out[i].add(l/second);
+        out[i].send();
+    }
+}
+
 
 // math functions
 fun dur exponentialInterpolation(int i, int n, dur l) {
@@ -52,12 +67,13 @@ fun dur exponentialInterpolation(int i, int n, dur l) {
     return y * division - x * division;
 }
 
+
 fun float angleRotation(int i, int n, int r) {
     return (i/(n$float) * r * TAU) % TAU;
 }
 
-// score functions
 
+// score functions
 fun void nodeChanges(dur transition, dur rest) {
     0 => int count;
     0 => int spkr;
@@ -68,6 +84,7 @@ fun void nodeChanges(dur transition, dur rest) {
         (spkr + 1) % 6 => spkr;
     }
 }
+
 
 fun void monophonicCircling(dur l, int n) {
     now => time start;
@@ -99,6 +116,7 @@ fun void monophonicCircling(dur l, int n) {
     }
 }
 
+
 fun void polyphonicCircling(dur l, int n) {
 
     0::samp => dur length;
@@ -115,7 +133,6 @@ fun void polyphonicCircling(dur l, int n) {
 }
 
 // ~ score
-
 spork ~ nodeChanges(30::second, 30::second);
 
 // first section
@@ -123,5 +140,3 @@ monophonicCircling(5::second, 50);
 
 // second section
 polyphonicCircling(8::minute, 20);
-
-
