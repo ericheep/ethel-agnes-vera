@@ -10,7 +10,8 @@ OscOut out[NUM_PIS];
 0.1::second => now;
 
 // ethel agnes vera
-["10.0.0.10", "10.0.0.20", "10.0.0.30"] @=> string ip[];
+// ["10.0.0.10", "10.0.0.20", "10.0.0.30"] @=> string ip[];
+["127.0.0.1", "10.0.0.20", "10.0.0.30"] @=> string ip[];
 
 // init
 for (0 => int i; i < NUM_PIS; i++) {
@@ -89,7 +90,7 @@ fun void nodeChanges(dur transition, dur rest) {
 fun void monophonicCircling(dur l, int n) {
     now => time start;
 
-    0::samp => dur length;
+    0::samp => dur iterationLength;
     0::samp => dur currentTime;
     0.0 => float angle;
     0 => int mod;
@@ -98,7 +99,7 @@ fun void monophonicCircling(dur l, int n) {
     l * 0.50 => dur half;
 
     for (0 => int i; i < n; i++) {
-        exponentialInterpolation(i, n, l) => length;
+        exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
         now - start => currentTime;
@@ -112,23 +113,24 @@ fun void monophonicCircling(dur l, int n) {
         }
 
         // triggerVoice(mod, length, angle + mod * 1.0/3.0 * TAU);
-        length => now;
+        iterationLength => now;
     }
 }
 
 
 fun void polyphonicCircling(dur l, int n) {
 
-    0::samp => dur length;
+    0::samp => dur iterationLength;
     0.0 => float angle;
 
     for (n - 1 => int i; i >= 0; i--) {
-        exponentialInterpolation(i, n, l) => length;
+        exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
         // triggerVoice(0, length, angle);
         // triggerVoice(1, length, (angle + (1.0/3.0) * TAU) % TAU);
         // triggerVoice(2, length, (angle + (2.0/3.0) * TAU) % TAU);
+        iterationLength => now;
     }
 }
 

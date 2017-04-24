@@ -217,7 +217,7 @@ while (true) {
         }
         if (msg.address == "/t") {
             msg.getInt(0) => int idx;
-            msg.getFloat(1) => float moveSeconds;
+            msg.getFloat(1) => float traverseSeconds;
             msg.getFloat(2) => float angle;
 
             // just in case
@@ -225,8 +225,8 @@ while (true) {
                 Machine.remove(voiceId[idx]);
             }
 
-            spork ~ traverseVoice(idx, moveSeconds::second, angle);
-            spork ~ voice[idx].stretch(moveSeconds::second);
+            spork ~ traverseVoice(idx, traverseSeconds::second, angle);
+            spork ~ voice[idx].stretch(traverseSeconds::second);
 
             if (debugPrint) {
                 <<< "/traverse", "voice:", idx, "nodes: [", node[0], node[1], "]", "" >>>;
