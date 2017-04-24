@@ -1,5 +1,5 @@
 // Eric Heep
-// April 17th, 2017
+// April 24th, 2017
 
 NodeConfigurations nodeConfig;
 
@@ -9,13 +9,12 @@ NodeConfigurations nodeConfig;
 OscOut out[NUM_PIS];
 0.1::second => now;
 
-// ethel agnes vera
-// ["10.0.0.10", "10.0.0.20", "10.0.0.30"] @=> string ip[];
-["127.0.0.1", "10.0.0.20", "10.0.0.30"] @=> string ip[];
+// ethel agnes vera local
+["ethel.local", "agnes.local", "vera.local", "local.host"] @=> string hosts[];
 
 // init
 for (0 => int i; i < NUM_PIS; i++) {
-    out[i].dest(ip[i], 12345);
+    out[i].dest(hosts[i], 12345);
     0.1::second => now;
 
     out[i].start("/pi");
