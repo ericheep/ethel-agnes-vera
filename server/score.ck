@@ -3,17 +3,18 @@
 
 NodeConfigurations nodeConfig;
 
-3 => int NUM_PIS;
+4 => int NUM_SENDERS;
 2.0 * pi => float TAU;
 
-OscOut out[NUM_PIS];
+OscOut out[NUM_SENDERS];
 0.1::second => now;
 
 // ethel agnes vera local
 ["ethel.local", "agnes.local", "vera.local", "local.host"] @=> string hosts[];
 
+
 // init
-for (0 => int i; i < NUM_PIS; i++) {
+for (0 => int i; i < NUM_SENDERS; i++) {
     out[i].dest(hosts[i], 12345);
     0.1::second => now;
 
@@ -25,7 +26,7 @@ for (0 => int i; i < NUM_PIS; i++) {
 
 // osc functions
 fun void triggerVoice(int v, dur l, float a) {
-    for (0 => int i; i < NUM_PIS; i++) {
+    for (0 => int i; i < NUM_SENDERS; i++) {
         out[i].start("/t");
         out[i].add(v);
         out[i].add(l/second);
@@ -36,7 +37,7 @@ fun void triggerVoice(int v, dur l, float a) {
 
 
 fun void setNode(int spkr, int ID) {
-    for (0 => int i; i < NUM_PIS; i++) {
+    for (0 => int i; i < NUM_SENDERS; i++) {
         out[i].start("/setNode");
         out[i].add(spkr);
         out[i].add(ID);
@@ -46,7 +47,7 @@ fun void setNode(int spkr, int ID) {
 
 
 fun void switchNode(int spkr, int ID, dur l) {
-    for (0 => int i; i < NUM_PIS; i++) {
+    for (0 => int i; i < NUM_SENDERS; i++) {
         out[i].start("/switchNode");
         out[i].add(spkr);
         out[i].add(ID);
@@ -111,7 +112,7 @@ fun void monophonicCircling(dur l, int n) {
             i % 3 => mod;
         }
 
-        // triggerVoice(mod, length, angle + mod * 1.0/3.0 * TAU);
+        triggerVoice(mod, length, angle + mod * 1.0/3.0 * TAU);
         iterationLength => now;
     }
 }
@@ -126,9 +127,9 @@ fun void polyphonicCircling(dur l, int n) {
         exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
-        // triggerVoice(0, length, angle);
-        // triggerVoice(1, length, (angle + (1.0/3.0) * TAU) % TAU);
-        // triggerVoice(2, length, (angle + (2.0/3.0) * TAU) % TAU);
+        triggerVoice(0, length, angle);
+        triggerVoice(1, length, (angle + (1.0/3.0) * TAU) % TAU);
+        triggerVoice(2, length, (angle + (2.0/3.0) * TAU) % TAU);
         iterationLength => now;
     }
 }

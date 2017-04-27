@@ -1,27 +1,24 @@
 // Eric Heep
-// April 19th, 2017
+// April 21st, 2017
 
 // OSC reciever that generates our audio
-// and calculates the MIAP algorithm
-// this script is 'stateless', and relies
-// entirely on the OSC sender
+// or produces our visualizations
+3 => int NUM_VOICES;
+NUM_VOICES * 2 => int NUM_NODES;
+NUM_VOICES * 2 => int NUM_SPKRS;
 
-MIAP m[3];
-// MIAPOSCVis v[3];
+MIAP m[NUM_VOICES];
 
-/*for (int i; i < 3; i++) {
-    spork ~ v[i].oscSend(m[i], i);
-}*/
-
-int voiceId[3];
-int voiceRunning[3];
+int voiceId[NUM_VOICES];
+int voiceRunning[NUM_VOICES];
+int switching[NUM_NODES];
 
 // very important variable
 0 => int whichPi;
 
 // stores the current node configuration which
 // relates to the pi's placement in the grid
-int piNodes[2];
+int node[NUM_NODES];
 
 // turn off for speed
 true => int debugPrint;
@@ -33,8 +30,8 @@ for (0 => int i; i < m.size(); i++) {
 
 // setting our center coordinates (only need to
 // pull from one, they're all the same
-m[0].nodeX(24) => float xCenter;
-m[0].nodeY(24) => float yCenter;
+m[0].nodeX(24) => float X_CENTER;
+m[0].nodeY(24) => float Y_CENTER;
 
 //        *-----*-----*-----*-----*-----*-----*
 //         \   / \   / \   / \   / \   / \   / \
@@ -61,108 +58,129 @@ OscMsg msg;
 
 12345 => in.port;
 in.listenAll();
+SndBufStretch voice[NUM_VOICES];
 
-Gain spkr[2];
-SndBufStretch voice[3];
+Gain spkr[NUM_NODES];
 
-voice[0].read("../wavs/ethel.wav");
-voice[1].read("../wavs/agnes.wav");
-voice[2].read("../wavs/vera.wav");
+["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
 
-// ethel
-Gain ethelLeft;
-Gain ethelRight;
-
-SndBufStretch ethel => ethelLeft => dac.left;
-ethel => ethelRight => dac.right;
-ethel.read(me.dir() + "../wavs/ethel.wav");
-ethel.pos(ethel.samples());
-
-// agnes
-Gain agnesLeft;
-Gain agnesRight;
-
-SndBufStretch agnes => agnesLeft => dac.left;
-agnes => agnesRight => dac.right;
-agnes.read(me.dir() + "../wavs/agnes.wav");
-agnes.pos(agnes.samples());
-
-// vera
-Gain veraLeft;
-Gain veraRight;
-
-SndBufStretch vera => veraLeft => dac.left;
-vera => veraRight => dac.right;
-vera.read(me.dir() + "../wavs/vera.wav");
-vera.pos(vera.samples());
-
-// oh yea! turn it up! (default values)
-ethel.gain(1.0);
-agnes.gain(1.0);
-vera.gain(1.0);
-
-dac.gain(0.8);
-
-fun float[] vectorCoordinate(float xOrigin, float yOrigin, float angle, float length) {
-    return [xOrigin + Math.cos(angle) * length, yOrigin + Math.sin(angle) * length];
+for (0 => int i; i < NUM_VOICES; i++) {
+    voice[i].read(voicePath[i]);
+    voice[i].pos(voice[i].samples());
+    voice[i].gain(1.0);
 }
 
-// moves a sound from one end to another
-fun void moveVoice(int voice, Gain leftGain, Gain rightGain, dur duration, float angle, int nodes[]) {
+voice[0] => spkr[0] => dac.left;
+voice[0] => spkr[1] => dac.right;
 
+voice[1] => spkr[2] => dac.left;
+voice[1] => spkr[3] => dac.right;
+
+voice[2] => spkr[4] => dac.left;
+voice[2] => spkr[5] => dac.right;
+
+// to ensure we don't overload the speakers
+dac.gain(0.8);
+
+
+fun float vectorCoordinateX(float xOrigin, float angle, float dist) {
+    return xOrigin + Math.cos(angle) * dist;
+}
+
+
+fun float vectorCoordinateY(float yOrigin, float angle, float dist) {
+    return yOrigin + Math.sin(angle) * dist;
+}
+
+
+fun void traverseVoice(int idx, dur duration, float angle) {
     // returns the id to the exit array so
     // there is no overlapping, very experimental
-    1 => voiceRunning[voice];
-    me.id() => voiceId[voice];
+    1 => voiceRunning[idx];
+    me.id() => voiceId[idx];
 
-    // increase this maybe for less spatial
-    // resolution but more processing
     1.0::ms => dur incrementalDuration;
-
-    // the number of times we can increment and
-    // stay within the duration specified
     (duration/incrementalDuration)$int => int numIncrements;
     (numIncrements * 0.5) $int => int halfNumIncrements;
 
     // one divide instead of like three thousand right?
     1.0/halfNumIncrements => float scalar;
 
-    float coordinate[2];
-    0.0 => float expScalar;
+    0.0 => float x;
+    0.0 => float y;
+    0.0 => float distance;
     0.5 => float radius;
 
     // from 0.0 to center
     for (halfNumIncrements => int i; i >= 0; i--) {
-        i * scalar => expScalar;
-        vectorCoordinate(xCenter, yCenter, angle, expScalar * radius) @=> coordinate;
+        i * scalar * radius => distance;
 
-        m[voice].position(coordinate[0], coordinate[1]);
-        // v[voice].updatePos(coordinate[0], coordinate[1]);
-
-        // adjust the proper gain UGens
-        leftGain.gain(m[voice].nodeValue(nodes[0]));
-        rightGain.gain(m[voice].nodeValue(nodes[1]));
+        vectorCoordinateX(Y_CENTER, angle, distance) => x;
+        vectorCoordinateY(X_CENTER, angle, distance) => y;
+        m[idx].position(x, y);
 
         incrementalDuration => now;
     }
 
     // from center to 1.0
     for (0 => int i; i < halfNumIncrements; i++) {
-        i * scalar => expScalar;
-        vectorCoordinate(xCenter, yCenter, angle, -expScalar * radius) @=> coordinate;
+        i * -scalar * radius => distance;
 
-        m[voice].position(coordinate[0], coordinate[1]);
-        // v[voice].updatePos(coordinate[0], coordinate[1]);
-
-        // adjust the proper gain UGens
-        leftGain.gain(m[voice].nodeValue(nodes[0]));
-        rightGain.gain(m[voice].nodeValue(nodes[1]));
+        vectorCoordinateX(X_CENTER, angle, distance) => x;
+        vectorCoordinateY(Y_CENTER, angle, distance) => y;
+        m[idx].position(x, y);
 
         incrementalDuration => now;
     }
 
-    0 => voiceRunning[voice];
+    0 => voiceRunning[idx];
 }
+
+
+fun void switchNode(int idx, int nodeId, float len) {
+    1::ms => dur iterationTime;
+    (len::second/iterationTime)$int => int iterations;
+
+    1.0/iterations => float inverseIterations;
+
+    node[idx] => int prevId;
+    nodeId => node[idx];
+
+    0.0 => float prevValue;
+    0.0 => float currValue;
+    0.0 => float scalar;
+
+    1 => switching[idx];
+
+    for (0 => int i; i < iterations; i++) {
+        i * inverseIterations => scalar;
+
+        m[idx].nodeValue(prevId) * (1.0 - scalar) => prevValue;
+        m[idx].nodeValue(nodeId) * scalar => currValue;
+
+        prevValue + currValue => spkr[idx].gain;
+        iterationTime => now;
+    }
+
+    0 => switching[idx];
+}
+
+
+fun void updateNodeValues() {
+    while(true) {
+        for(0 => int i; i < NUM_VOICES; i++) {
+            for(0 => int j; j < 2; j++) {
+                // we only want to update the gain if that node is NOT switching
+                if(!switching[i * 2 + j]) {
+                    m[i].nodeValue(node[i * 2 + j]) => spkr[i * 2 + j].gain;
+                }
+            }
+        }
+        1::ms => now;
+    }
+}
+
+spork ~ updateNodeValues();
 
 // osc event loop
 while (true) {
@@ -175,54 +193,34 @@ while (true) {
                 <<< "/pi", whichPi, "" >>>;
             }
         }
-        if (msg.address == "/n") {
-            msg.getInt(0) => int nodeConfiguration;
-            msg.getInt(1) => int whichPi;
+        if (msg.address == "/setNode") {
+            msg.getInt(0) => int spkr;
+            msg.getInt(1) => int nodeID;
 
-            if (nodeConfiguration == 0) {
-                smallHexagon[whichPi] @=> piNodes;
-            }
-            if (nodeConfiguration == 1) {
-                triangles[whichPi] @=> piNodes;
-            }
-            if (nodeConfiguration == 2) {
-                heartbeat[whichPi] @=> piNodes;
-            }
-            if (nodeConfiguration == 3) {
-                bowtie[whichPi] @=> piNodes;
-            }
-            if (nodeConfiguration == 4) {
-                largeHexagon[whichPi] @=> piNodes;
-            }
+            nodeID => node[spkr];
         }
-        if (msg.address == "/m") {
-            msg.getInt(0) => int voice;
-            msg.getFloat(1) => float seconds;
+        if (msg.address == "/switchNode") {
+            msg.getInt(0) => int spkr;
+            msg.getInt(1) => int nodeID;
+            msg.getFloat(2) => float transitionSeconds;
+
+            spork ~ switchNode(spkr, nodeID, transitionSeconds);
+        }
+        if (msg.address == "/t") {
+            msg.getInt(0) => int idx;
+            msg.getFloat(1) => float traverseSeconds;
             msg.getFloat(2) => float angle;
 
             // just in case
-            if (voiceRunning[voice]) {
-                Machine.remove(voiceId[voice]);
+            if (voiceRunning[idx]) {
+                Machine.remove(voiceId[idx]);
             }
 
-            // ethel
-            if (voice == 0) {
-                spork ~ moveVoice(voice, ethelLeft, ethelRight, seconds::second, angle, piNodes);
-                spork ~ ethel.stretch(seconds::second);
-            }
-            // agnes
-            else if (voice == 1) {
-                spork ~ moveVoice(voice, agnesLeft, agnesRight, seconds::second, angle, piNodes);
-                spork ~ agnes.stretch(seconds::second);
-            }
-            // vera
-            else if (voice == 2) {
-                spork ~ moveVoice(voice, veraLeft, veraRight, seconds::second, angle, piNodes);
-                spork ~ vera.stretch(seconds::second);
-            }
+            spork ~ traverseVoice(idx, traverseSeconds::second, angle);
+            spork ~ voice[idx].stretch(traverseSeconds::second);
 
             if (debugPrint) {
-                <<< "/m", "voice:", voice, "nodes: [", piNodes[0], piNodes[1], "]", "" >>>;
+                <<< "/traverse", "voice:", idx, "nodes: [", node[0], node[1], "]", "" >>>;
             }
         }
     }

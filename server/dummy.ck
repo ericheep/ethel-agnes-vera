@@ -1,102 +1,12 @@
 // Eric Heep
-// April 21st, 2017
+// April 25th, 2017
+// vis.ck
 
-// OSC reciever that generates our audio
-// or produces our visualizations
-3 => int NUM_VOICES;
-NUM_VOICES * 2 => int NUM_NODES;
-NUM_VOICES * 2 => int NUM_SPKRS;
+MIAPOSCVis v[NUM_VOICES];
 
-MIAP m[NUM_VOICES];
-// MIAPOSCVis v[NUM_VOICES];
-
-/*for (int i; i < NUM_VOICES; i++) {
+for (int i; i < NUM_VOICES; i++) {
     spork ~ v[i].oscSend(m[i], i);
-}*/
-
-int voiceId[NUM_VOICES];
-int voiceRunning[NUM_VOICES];
-int switching[NUM_NODES];
-
-// very important variable
-0 => int whichPi;
-
-// stores the current node configuration which
-// relates to the pi's placement in the grid
-int node[NUM_NODES];
-
-// turn off for speed
-true => int debugPrint;
-
-// five rows, seven columns
-for (0 => int i; i < m.size(); i++) {
-    m[i].generateGrid(7, 7);
 }
-
-// setting our center coordinates (only need to
-// pull from one, they're all the same
-m[0].nodeX(24) => float X_CENTER;
-m[0].nodeY(24) => float Y_CENTER;
-
-//        *-----*-----*-----*-----*-----*-----*
-//         \   / \   / \   / \   / \   / \   / \
-//          \ /   \ /   \ /   \ /   \ /   \ /   \
-//           *-----*-----9----10----11-----*-----*
-//          / \   / \   / \   / \   / \   / \   /
-//         /   \ /   \ /   \ /   \ /   \ /   \ /
-//        *-----*----16----17----18----19-----*
-//         \   / \   / \   / \   / \   / \   / \
-//          \ /   \ /   \ /   \ /   \ /   \ /   \
-//           *----22----23----24----25----26-----*
-//          / \   / \   / \   / \   / \   / \   /
-//         /   \ /   \ /   \ /   \ /   \ /   \ /
-//        *-----*----30----31----32----33-----*
-//         \   / \   / \   / \   / \   / \   / \
-//          \ /   \ /   \ /   \ /   \ /   \ /   \
-//           *-----*----37----38----39-----*-----*
-//          / \   / \   / \   / \   / \   / \   /
-//         /   \ /   \ /   \ /   \ /   \ /   \ /
-//        *-----*-----*-----*-----*-----*-----*
-
-OscIn in;
-OscMsg msg;
-
-12345 => in.port;
-in.listenAll();
-SndBufStretch voice[NUM_VOICES];
-
-Gain spkr[NUM_NODES];
-
-["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
-
-for (0 => int i; i < NUM_VOICES; i++) {
-    voice[i].read(voicePath[i]);
-    voice[i].pos(voice[i].samples());
-    voice[i].gain(1.0);
-}
-
-voice[0] => spkr[0] => dac.left;
-voice[0] => spkr[1] => dac.right;
-
-voice[1] => spkr[2] => dac.left;
-voice[1] => spkr[3] => dac.right;
-
-voice[2] => spkr[4] => dac.left;
-voice[2] => spkr[5] => dac.right;
-
-// to ensure we don't overload the speakers
-dac.gain(0.8);
-
-
-fun float vectorCoordinateX(float xOrigin, float angle, float dist) {
-    return xOrigin + Math.cos(angle) * dist;
-}
-
-
-fun float vectorCoordinateY(float yOrigin, float angle, float dist) {
-    return yOrigin + Math.sin(angle) * dist;
-}
-
 
 fun void traverseVoice(int idx, dur duration, float angle) {
     // returns the id to the exit array so
@@ -122,9 +32,7 @@ fun void traverseVoice(int idx, dur duration, float angle) {
 
         vectorCoordinateX(Y_CENTER, angle, distance) => x;
         vectorCoordinateY(X_CENTER, angle, distance) => y;
-
-        m[idx].position(x, y);
-        // v[idx].updatePos(x, y);
+        v[idx].updatePos(x, y);
 
         incrementalDuration => now;
     }
@@ -135,9 +43,7 @@ fun void traverseVoice(int idx, dur duration, float angle) {
 
         vectorCoordinateX(X_CENTER, angle, distance) => x;
         vectorCoordinateY(Y_CENTER, angle, distance) => y;
-
-        m[idx].position(x, y);
-        // v[idx].updatePos(x, y);
+        v[idx].updatePos(x, y);
 
         incrementalDuration => now;
     }
@@ -174,7 +80,6 @@ fun void switchNode(int idx, int nodeId, float len) {
     0 => switching[idx];
 }
 
-
 fun void updateNodeValues() {
     while(true) {
         for(0 => int i; i < NUM_VOICES; i++) {
@@ -188,8 +93,6 @@ fun void updateNodeValues() {
         1::ms => now;
     }
 }
-
-spork ~ updateNodeValues();
 
 // osc event loop
 while (true) {
