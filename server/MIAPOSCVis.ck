@@ -8,72 +8,91 @@ public class MIAPOSCVis {
     OscOut out;
     out.dest("127.0.0.1", 12000);
 
-    0.0 => float xPos;
-    0.0 => float yPos;
+    float m_xPos[3];
+    float m_yPos[3];
 
-    public void updatePos(float x, float y) {
-        x => xPos;
-        y => yPos;
+    public void updatePos(int idx, MIAP m) {
+        while (true) {
+            m.positionX() => m_xPos[idx];
+            m.positionY() => m_yPos[idx];
+            1::ms => now;
+        }
     }
 
+
     public void addAllNodes(MIAP m) {
-        for (0 => int i; i < m.nodes.size(); i++) {
+        for (0 => int i; i < m.numNodes(); i++) {
             out.start("/coord");
             out.add(i);
-            out.add(m.nodes[i].coordinate[0]);
-            out.add(m.nodes[i].coordinate[1]);
-            out.send();
-
-            out.start("/gain");
-            out.add(i);
-            out.add(m.nodes[i].gain);
+            out.add(m.nodeX(i));
+            out.add(m.nodeY(i));
             out.send();
         }
     }
 
     public void updateNonZeroNodes(MIAP m) {
-        for (0 => int i; i < m.nodes.size(); i++) {
-            if (m.nodes[i].gain > 0) {
+        for (0 => int i; i < m.numNodes(); i++) {
+            if (m.nodeValue(i) > 0) {
                 out.start("/gain");
                 out.add(i);
-                out.add(m.nodes[i].gain);
+                out.add(m.nodeValue(i));
                 out.send();
             }
         }
     }
 
-    public void oscSend(MIAP m, int voice) {
-        addAllNodes(m);
+    public void updateMIAP(MIAP m, int idx) {
+        out.start("/pos");
+        out.add(idx);
+        out.add(m_xPos[idx]);
+        out.add(m_yPos[idx]);
+        out.send();
 
-        while (true) {
-            out.start("/pos");
-            out.add(voice);
-            out.add(xPos);
-            out.add(yPos);
+        if (m.activeTriset() >= 0) {
+            out.start("/active");
+            out.add(idx);
+            out.add(1);
             out.send();
 
-            if (m.getActiveTriset() >= 0) {
-                out.start("/active");
-                out.add(1);
-                out.send();
+            [m.activeNode(0), m.activeNode(1), m.activeNode(2)] @=> int nodeID[];
 
-                m.getActiveCoordinates() @=> float c[][];
-
-                for (0 => int i; i < c.size(); i++) {
-                    out.start("/activeCoord");
-                    out.add(i);
-                    out.add(c[i][0]);
-                    out.add(c[i][1]);
-                    out.send();
-                }
-            }
-            else {
-                out.start("/active");
-                out.add(0);
+            for (0 => int i; i < 3; i++) {
+                out.start("/activeCoord");
+                out.add(idx);
+                out.add(i);
+                out.add(m.nodeX(nodeID[i]));
+                out.add(m.nodeY(nodeID[i]));
                 out.send();
             }
-            updateNonZeroNodes(m);
-            second/30.0 => now;
+        }
+        else {
+            out.start("/active");
+            out.add(idx);
+            out.add(0);
+            out.send();
+        }
+    }
+
+    public void oscSend(MIAP m1, MIAP m2, MIAP m3) {
+        addAllNodes(m1);
+
+        spork ~ updatePos(0, m1);
+        spork ~ updatePos(1, m2);
+        spork ~ updatePos(2, m3);
+
+        while (true) {
+            updateMIAP(m1, 0);
+            samp => now;
+            updateNonZeroNodes(m1);
+            samp => now;
+            updateMIAP(m2, 1);
+            samp => now;
+            updateNonZeroNodes(m2);
+            samp => now;
+            updateMIAP(m3, 2);
+            samp => now;
+            updateNonZeroNodes(m3);
+            second/60.0 => now;
         }
     }
 }
