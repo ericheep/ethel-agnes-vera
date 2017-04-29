@@ -13,13 +13,13 @@ float posY[] = new float[3];
 boolean[] trisetActive = new boolean[3];
 
 Node[] nodes;
-Triset triset;
+Triset[] triset;
 
 void setup() {
   background(0);
   frameRate(60);
   //fullScreen();
-  size(800, 800);
+  size(600, 600);
 
   for (int i = 0; i < voices; i++) {
      trisetActive[i] = false; 
@@ -30,7 +30,10 @@ void setup() {
     nodes[i] = new Node();
   }
 
-  triset = new Triset();
+  triset = new Triset[3];
+  for (int i = 0; i < 3; i++) {
+     triset[i] = new Triset(); 
+  }
 
   oscP5 = new OscP5(this, 12000);
   myRemoteLocation = new NetAddress("127.0.0.1", 12000);
@@ -57,13 +60,14 @@ void oscEvent(OscMessage msg) {
   }
   if (msg.checkAddrPattern("/activeCoord") == true) {
     int idx = msg.get(0).intValue();
-    float x = msg.get(1).floatValue() * width;
-    float y = msg.get(2).floatValue() * height;
-    triset.setActiveCoordinate(idx, x, y);
+    int nodeID = msg.get(1).intValue();
+    float x = msg.get(2).floatValue() * width;
+    float y = msg.get(3).floatValue() * height;
+    triset[idx].setActiveCoordinate(nodeID, x, y);
   }
   if (msg.checkAddrPattern("/active") == true) {
     int voice = msg.get(0).intValue();
-    if (msg.get(2).intValue() == 1) {
+    if (msg.get(1).intValue() == 1) {
       trisetActive[voice] = true;
     } else {
       trisetActive[voice] = false;
@@ -81,7 +85,7 @@ void draw() {
   for (int i = 0; i < 3; i++) {
     ellipse(posX[i] * width, posY[i] * height, 10, 10);
     if (trisetActive[i]) {
-      triset.update(posX[i] * width, posY[i] * height);
+      triset[i].update(posX[i] * width, posY[i] * height);
     }
   }
   for (int i = 0; i < nodes.length; i++) {
