@@ -3,56 +3,88 @@
 
 NodeConfigurations nodeConfig;
 
+3 => int NUM_PIS;
 4 => int NUM_SENDERS;
 2.0 * pi => float TAU;
 
 OscOut out[NUM_SENDERS];
 0.1::second => now;
 
-// ethel agnes vera local
-["ethel.local", "agnes.local", "vera.local", "local.host"] @=> string hosts[];
+1 => int VIS_ONLY;
 
+// ethel agnes vera local
+["ethel.local", "agnes.local", "vera.local", "localhost"] @=> string hosts[];
 
 // init
-for (0 => int i; i < NUM_SENDERS; i++) {
-    out[i].dest(hosts[i], 12345);
-    0.1::second => now;
+if (VIS_ONLY) {
+    out[3].dest("localhost", 12345);
+} else {
+    for (0 => int i; i < NUM_SENDERS; i++) {
+        out[i].dest(hosts[i], 12345);
+    }
+}
 
-    out[i].start("/pi");
-    out[i].add(i);
-    out[i].send();
+if (!VIS_ONLY) {
+    for (0 => int i; i < NUM_PIS; i++) {
+        out[i].start("/pi");
+        out[i].add(i);
+        out[i].send();
+    }
 }
 
 
 // osc functions
 fun void triggerVoice(int v, dur l, float a) {
-    for (0 => int i; i < NUM_SENDERS; i++) {
-        out[i].start("/t");
-        out[i].add(v);
-        out[i].add(l/second);
-        out[i].add(a);
-        out[i].send();
+    if (VIS_ONLY) {
+        out[3].start("/traverse");
+        out[3].add(v);
+        out[3].add(l/second);
+        out[3].add(a);
+        out[3].send();
+    } else {
+        for (0 => int i; i < NUM_SENDERS; i++) {
+            out[i].start("/traverse");
+            out[i].add(v);
+            out[i].add(l/second);
+            out[i].add(a);
+            out[i].send();
+        }
     }
 }
 
 
 fun void setNode(int spkr, int ID) {
-    for (0 => int i; i < NUM_SENDERS; i++) {
-        out[i].start("/setNode");
-        out[i].add(spkr);
-        out[i].add(ID);
-        out[i].send();
+    if (VIS_ONLY) {
+        out[3].start("/setNode");
+        out[3].add(spkr);
+        out[3].add(ID);
+        out[3].send();
+    } else {
+        for (0 => int i; i < NUM_SENDERS; i++) {
+            out[i].start("/setNode");
+            out[i].add(spkr);
+            out[i].add(ID);
+            out[i].send();
+        }
     }
 }
 
 
 fun void switchNode(int spkr, int ID, dur l) {
-    for (0 => int i; i < NUM_SENDERS; i++) {
-        out[i].start("/switchNode");
-        out[i].add(spkr);
-        out[i].add(ID);
-        out[i].add(l/second);
-        out[i].send();
+    if (VIS_ONLY) {
+        out[3].start("/switchNode");
+        out[3].add(spkr);
+        out[3].add(ID);
+        out[3].add(l/second);
+        out[3].send();
+    } else {
+        for (0 => int i; i < NUM_SENDERS; i++) {
+            out[i].start("/switchNode");
+            out[i].add(spkr);
+            out[i].add(ID);
+            out[i].add(l/second);
+            out[i].send();
+        }
     }
 }
 
@@ -76,13 +108,19 @@ fun float angleRotation(int i, int n, int r) {
 
 // score functions
 fun void nodeChanges(dur transition, dur rest) {
-    0 => int count;
+    0 => int nodeID;
     0 => int spkr;
+    0 => int change;
+
     while (true) {
         rest => now;
-        setNode(spkr, ID, transition);
+
+        nodeConfig.getSpeaker(change) => spkr;
+        nodeConfig.getNodeID(change) => nodeID;
+        switchNode(spkr, nodeID, transition);
         transition => now;
-        (spkr + 1) % 6 => spkr;
+
+        (change + 1) % 6 => spkr;
     }
 }
 
@@ -112,7 +150,7 @@ fun void monophonicCircling(dur l, int n) {
             i % 3 => mod;
         }
 
-        triggerVoice(mod, length, angle + mod * 1.0/3.0 * TAU);
+        triggerVoice(mod, iterationLength, angle + mod * 1.0/3.0 * TAU);
         iterationLength => now;
     }
 }
@@ -127,18 +165,24 @@ fun void polyphonicCircling(dur l, int n) {
         exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
-        triggerVoice(0, length, angle);
-        triggerVoice(1, length, (angle + (1.0/3.0) * TAU) % TAU);
-        triggerVoice(2, length, (angle + (2.0/3.0) * TAU) % TAU);
+        triggerVoice(0, iterationLength, angle);
+        triggerVoice(1, iterationLength, (angle + (1.0/3.0) * TAU) % TAU);
+        triggerVoice(2, iterationLength, (angle + (2.0/3.0) * TAU) % TAU);
         iterationLength => now;
     }
 }
 
 // ~ score
+
+8::minute => dur firstSection;
+8::minute => dur secondSection;
+
+(firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
+
 spork ~ nodeChanges(30::second, 30::second);
 
 // first section
-monophonicCircling(5::second, 50);
+monophonicCircling(firstSection, 50);
 
 // second section
-polyphonicCircling(8::minute, 20);
+polyphonicCircling(secondSection, 20);

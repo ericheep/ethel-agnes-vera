@@ -1,9 +1,10 @@
 public class NodeConfigurations {
 
     // L, R
-    [17, 23,
-     25, 18,
-     31, 32] @=> int smallHexagon[];
+    // [17, 23,
+    //  25, 18,
+    //  31, 32]
+    // @=> int smallHexagon[];
 
     //               17----18
     //               /       \
@@ -14,9 +15,9 @@ public class NodeConfigurations {
     //               31----32
 
     // L, R
-    [16, 23,
-     25, 17,
-     32, 33] @=> int triangles[];
+    // [16, 23,
+    //  25, 17,
+    //  32, 33] @=> int triangles[];
 
     //         16----17
     //          \    /
@@ -27,9 +28,9 @@ public class NodeConfigurations {
     //                     32----33
 
     // L, R
-    [17, 22,
-     26, 25,
-     23, 32] @=> int heartbeat[];
+    // [17, 22,
+    //  26, 25,
+    //  23, 32] @=> int heartbeat[];
 
     //               17
     //               / \
@@ -40,9 +41,9 @@ public class NodeConfigurations {
     //                     32
 
     // L, R
-    [17, 22,
-     26, 11,
-     37, 32] @=> int bowtie[];
+    // [17, 22,
+    //  26, 11,
+    //  37, 32] @=> int bowtie[];
 
     //                         11
     //                         / \
@@ -59,9 +60,9 @@ public class NodeConfigurations {
     //             37
 
     // L, R
-    [ 9, 22,
-     26, 11,
-     37, 39] @=> int largeHexagon[];
+    // [ 9, 22,
+    //  26, 11,
+    //  37, 39] @=> int largeHexagon[];
 
     //               9-----*----11
     //              /             \
@@ -78,15 +79,20 @@ public class NodeConfigurations {
     //              37-----*----39
 
 
-    int configuration[0][0];
+    [[0, 16], [3, 17], [4, 32], [5, 33],
+     [0, 17], [1, 22], [2, 26], [3, 25], [4, 32], [5, 33],
+     [3, 11], [4, 27],
+     [0, 9 ], [5, 39]] @=> int changes[][];
 
-    configuration << smallHexagon;
-    configuration << triangles;
-    configuration << heartbeat;
-    configuration << bowtie;
-    configuration << largeHexagon;
+    fun int getSpeaker(int idx) {
+        return changes[idx][0];
+    }
 
-    fun int configurationSize() {
-        return configuration.size() * configuration[0].size();
+    fun int getNodeID(int idx) {
+        return changes[idx][1];
+    }
+
+    fun int size() {
+        return changes.size();
     }
 }
