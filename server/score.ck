@@ -1,5 +1,6 @@
+// score.ck
 // Eric Heep
-// April 24th, 2017
+// May 1st, 2017
 
 NodeConfigurations nodeConfig;
 
@@ -9,7 +10,7 @@ NodeConfigurations nodeConfig;
 
 OscOut out[NUM_SENDERS];
 
-1 => int VIS_ONLY;
+0 => int VIS_ONLY;
 
 // ethel agnes vera local
 ["ethel.local", "agnes.local", "vera.local", "localhost"] @=> string hosts[];

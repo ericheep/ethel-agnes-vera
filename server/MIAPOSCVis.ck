@@ -1,5 +1,6 @@
+// MIAPOSCVis.ck
 // Eric Heep
-// March 8th, 2017
+// May 1st, 2017
 
 // quick class for visualizing while composing
 // pairs with the miap_visualization.pde Processsing file
