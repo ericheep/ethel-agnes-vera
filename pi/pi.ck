@@ -93,8 +93,6 @@ fun void switchNode(int idx, int nodeID, dur len) {
 
     node[idx] => int prevID;
 
-    <<< "P:", prevID, " C:", nodeID, "" >>>;
-
     0.0 => float prevValue;
     0.0 => float currValue;
     0.0 => float scalar;
@@ -158,7 +156,7 @@ while (true) {
 
             spork ~ switchNode(spkr, nodeID, transitionSeconds::second);
         }
-        if (msg.address == "/traverse") {
+        if (msg.address == "/t") {
             msg.getInt(0) => int idx;
             msg.getFloat(1) => float traverseSeconds;
             msg.getFloat(2) => float angle;
@@ -172,7 +170,7 @@ while (true) {
             spork ~ voice[idx].stretch(traverseSeconds::second);
 
             if (debugPrint) {
-                <<< "/traverse", "voice:", idx, "nodes: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
+                <<< "/t", "v:", idx, "n: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
             }
         }
     }
