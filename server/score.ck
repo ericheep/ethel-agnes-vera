@@ -22,6 +22,7 @@ if (VIS_ONLY) {
     for (0 => int i; i < NUM_SENDERS; i++) {
         out[i].dest(hosts[i], 12345);
     }
+    out[3].dest("localhost", 12500);
 }
 
 if (!VIS_ONLY) {

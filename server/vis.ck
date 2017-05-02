@@ -57,7 +57,7 @@ while (true) {
             spork ~ v.switchNode(node[spkr], nodeID, transitionSeconds::second);
             nodeID => node[spkr];
         }
-        if (msg.address == "/traverse") {
+        if (msg.address == "/t") {
             msg.getInt(0) => int idx;
             msg.getFloat(1) => float traverseSeconds;
             msg.getFloat(2) => float angle;
