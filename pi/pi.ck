@@ -53,6 +53,9 @@ m[0].nodeY(24) => float Y_CENTER;
 //         /   \ /   \ /   \ /   \ /   \ /   \ /
 //        *-----*-----*-----*-----*-----*-----*
 
+Traverse t;
+t.setCenter(X_CENTER, Y_CENTER);
+
 OscIn in;
 OscMsg msg;
 
@@ -82,69 +85,15 @@ voice[2] => spkr[5] => dac.right;
 // to ensure we don't overload the speakers
 dac.gain(0.8);
 
-
-fun float vectorCoordinateX(float xOrigin, float angle, float dist) {
-    return xOrigin + Math.cos(angle) * dist;
-}
-
-
-fun float vectorCoordinateY(float yOrigin, float angle, float dist) {
-    return yOrigin + Math.sin(angle) * dist;
-}
-
-
-fun void traverseVoice(int idx, dur duration, float angle) {
-    // returns the id to the exit array so
-    // there is no overlapping, very experimental
-    1 => voiceRunning[idx];
-    me.id() => voiceId[idx];
-
-    1.0::ms => dur incrementalDuration;
-    (duration/incrementalDuration)$int => int numIncrements;
-    (numIncrements * 0.5) $int => int halfNumIncrements;
-
-    // one divide instead of like three thousand right?
-    1.0/halfNumIncrements => float scalar;
-
-    0.0 => float x;
-    0.0 => float y;
-    0.0 => float distance;
-    0.5 => float radius;
-
-    // from 0.0 to center
-    for (halfNumIncrements => int i; i >= 0; i--) {
-        i * scalar * radius => distance;
-
-        vectorCoordinateX(Y_CENTER, angle, distance) => x;
-        vectorCoordinateY(X_CENTER, angle, distance) => y;
-        m[idx].position(x, y);
-
-        incrementalDuration => now;
-    }
-
-    // from center to 1.0
-    for (0 => int i; i < halfNumIncrements; i++) {
-        i * -scalar * radius => distance;
-
-        vectorCoordinateX(X_CENTER, angle, distance) => x;
-        vectorCoordinateY(Y_CENTER, angle, distance) => y;
-        m[idx].position(x, y);
-
-        incrementalDuration => now;
-    }
-
-    0 => voiceRunning[idx];
-}
-
-
-fun void switchNode(int idx, int nodeId, float len) {
+fun void switchNode(int idx, int nodeID, dur len) {
     1::ms => dur iterationTime;
-    (len::second/iterationTime)$int => int iterations;
+    (len/iterationTime)$int => int iterations;
 
     1.0/iterations => float inverseIterations;
 
-    node[idx] => int prevId;
-    nodeId => node[idx];
+    node[idx] => int prevID;
+
+    <<< "P:", prevID, " C:", nodeID, "" >>>;
 
     0.0 => float prevValue;
     0.0 => float currValue;
@@ -155,22 +104,23 @@ fun void switchNode(int idx, int nodeId, float len) {
     for (0 => int i; i < iterations; i++) {
         i * inverseIterations => scalar;
 
-        m[idx].nodeValue(prevId) * (1.0 - scalar) => prevValue;
-        m[idx].nodeValue(nodeId) * scalar => currValue;
+        m[idx].nodeValue(prevID) * (1.0 - scalar) => prevValue;
+        m[idx].nodeValue(nodeID) * scalar => currValue;
 
         prevValue + currValue => spkr[idx].gain;
         iterationTime => now;
     }
 
+    nodeID => node[idx];
     0 => switching[idx];
 }
 
 
 fun void updateNodeValues() {
+    // we only want to update the gain if that node is NOT switching
     while(true) {
         for(0 => int i; i < NUM_VOICES; i++) {
             for(0 => int j; j < 2; j++) {
-                // we only want to update the gain if that node is NOT switching
                 if(!switching[i * 2 + j]) {
                     m[i].nodeValue(node[i * 2 + j]) => spkr[i * 2 + j].gain;
                 }
@@ -204,7 +154,7 @@ while (true) {
             msg.getInt(1) => int nodeID;
             msg.getFloat(2) => float transitionSeconds;
 
-            spork ~ switchNode(spkr, nodeID, transitionSeconds);
+            spork ~ switchNode(spkr, nodeID, transitionSeconds::second);
         }
         if (msg.address == "/t") {
             msg.getInt(0) => int idx;
@@ -216,7 +166,7 @@ while (true) {
                 Machine.remove(voiceId[idx]);
             }
 
-            spork ~ traverseVoice(idx, traverseSeconds::second, angle);
+            spork ~ t.traverseVoice(m[idx], idx, traverseSeconds::second, angle);
             spork ~ voice[idx].stretch(traverseSeconds::second);
 
             if (debugPrint) {

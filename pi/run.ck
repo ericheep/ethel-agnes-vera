@@ -3,5 +3,6 @@
 // run.ck
 
 Machine.add(me.dir() + "SndBufStretch.ck");
+Machine.add(me.dir() + "../Traverse.ck");
 Machine.add(me.dir() + "pi.ck");
 
