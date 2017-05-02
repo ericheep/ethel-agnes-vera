@@ -172,7 +172,7 @@ while (true) {
             spork ~ voice[idx].stretch(traverseSeconds::second);
 
             if (debugPrint) {
-                <<< "/traverse", "voice:", idx, "nodes: [", node[0], node[1], "]", "" >>>;
+                <<< "/traverse", "voice:", idx, "nodes: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
             }
         }
     }
