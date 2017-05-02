@@ -1,5 +1,6 @@
 class Triset { 
   float ax, ay, bx, by, cx, cy;
+  float g1, g2, g3;
   
   Triset () {  
     ax = 0;
@@ -10,28 +11,37 @@ class Triset {
     cy = 0;
   } 
   
-  void setActiveCoordinate(float idx, float x, float y) {
+  void setActiveCoordinate(float idx, float x, float y, float g) {
     if (idx == 0) {
       ax = x;
       ay = y;
+      g1 = g * 270 + 90;
     }
     if (idx == 1) {
       bx = x;
       by = y;
+      g2 = g * 270 + 90;
     }
     if (idx == 2) {
       cx = x;
       cy = y;
+      g3 = g * 270 + 90;
     }
   }
   
   void update(float posX, float posY) {
+    stroke(330, 360, g1);
     line(ax, ay, posX, posY);
+    stroke(330, 360, g2);
     line(bx, by, posX, posY);
+    stroke(330, 360, g3);
     line(cx, cy, posX, posY);
 
+    stroke(330, 360, g1);
     line(ax, ay, bx, by); 
+    stroke(330, 360, g2);
     line(bx, by, cx, cy);
+    stroke(330, 360, g3);
     line(cx, cy, ax, ay);
   } 
 } 
