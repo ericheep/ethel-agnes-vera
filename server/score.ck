@@ -36,14 +36,14 @@ if (!VIS_ONLY) {
 // osc functions
 fun void triggerVoice(int v, dur l, float a) {
     if (VIS_ONLY) {
-        out[3].start("/traverse");
+        out[3].start("/t");
         out[3].add(v);
         out[3].add(l/second);
         out[3].add(a);
         out[3].send();
     } else {
         for (0 => int i; i < NUM_SENDERS; i++) {
-            out[i].start("/traverse");
+            out[i].start("/t");
             out[i].add(v);
             out[i].add(l/second);
             out[i].add(a);
@@ -111,11 +111,6 @@ fun void nodeChanges(dur transition, dur rest) {
     0 => int nodeID;
     0 => int spkr;
     0 => int change;
-
-    [17, 23, 25, 18, 31, 32] @=> int initialConfig[];
-    for (0 => int i; i < 6; i++) {
-        setNode(i, initialConfig[i]);
-    }
 
     while (true) {
         rest => now;
@@ -188,7 +183,15 @@ fun void polyphonicCircling(dur l, int n) {
 
 (firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
 
-30::second => now;
+25::second => now;
+
+[17, 23, 25, 18, 31, 32] @=> int initialConfig[];
+for (0 => int i; i < 6; i++) {
+    setNode(i, initialConfig[i]);
+}
+
+5::second => now;
+
 <<< " - Start - ", "" >>>;
 
 spork ~ nodeChanges(transitionTime/2.0, transitionTime/2.0);
