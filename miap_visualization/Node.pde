@@ -1,19 +1,18 @@
 class Node { 
   float xPos, yPos;  
-  float gain;
+  float gain, brightness;
+  float scaledBrightness;
   boolean m_active;
-  color nodeColor;
   
   Node () {  
     xPos = 0;
     yPos = 0;
     gain = 0;
-    nodeColor = color(330, 360, 90);
   } 
   
   void setBrightness(float b) {
-     float scaledBrightness = b * 270 + 90; 
-     nodeColor = color(330, 360, scaledBrightness); 
+     brightness = b;
+     scaledBrightness = b * 280 + 20; 
   }
   
   void setGain(float g) {
@@ -34,7 +33,7 @@ class Node {
   }
   
   void update(float multiplier) { 
-    stroke(nodeColor);
-    ellipse(xPos, yPos, gain * multiplier + 3.0, gain * multiplier + 3.0); 
+    stroke(330, 360, scaledBrightness + gain * 60);
+    ellipse(xPos, yPos, gain * multiplier + 2.0, gain * multiplier + 2.0); 
   } 
 } 

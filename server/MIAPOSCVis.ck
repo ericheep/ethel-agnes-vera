@@ -65,14 +65,13 @@ public class MIAPOSCVis {
             out.add(1);
             out.send();
 
-            [m.activeNode(0), m.activeNode(1), m.activeNode(2)] @=> int nodeID[];
-
             for (0 => int i; i < 3; i++) {
                 out.start("/activeCoord");
                 out.add(idx);
+                out.add(m.activeNode(i));
                 out.add(i);
-                out.add(m.nodeX(nodeID[i]));
-                out.add(m.nodeY(nodeID[i]));
+                out.add(m.nodeX(m.activeNode(i)));
+                out.add(m.nodeY(m.activeNode(i)));
                 out.send();
             }
         }

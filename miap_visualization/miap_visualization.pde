@@ -19,11 +19,10 @@ Triset[] triset;
 void setup() {
   background(0);
   frameRate(60);
-  //fullScreen();
-  size(600, 600);
+  fullScreen();
   colorMode(HSB, 360); 
   noCursor();
-  offset = (width - height) * 0.5;
+  offset = (width - height) * 0.5 - ((height/7.5) * 0.5);
   
   for (int i = 0; i < voices; i++) {
     trisetActive[i] = false;
@@ -64,11 +63,13 @@ void oscEvent(OscMessage msg) {
     nodes[idx].setGain(gain);
   }
   if (msg.checkAddrPattern("/activeCoord") == true) {
-    int idx = msg.get(0).intValue();
+    int trisetID = msg.get(0).intValue();
     int nodeID = msg.get(1).intValue();
-    float x = msg.get(2).floatValue() * height + offset;
-    float y = msg.get(3).floatValue() * height;
-    triset[idx].setActiveCoordinate(nodeID, x, y, nodes[nodeID].getGain());
+    int localNode = msg.get(2).intValue();
+    float x = msg.get(3).floatValue() * height + offset;
+    float y = msg.get(4).floatValue() * height;
+    float g = nodes[nodeID].gain * nodes[nodeID].brightness;
+    triset[trisetID].setActiveCoordinate(localNode, x, y, g);
   }
   if (msg.checkAddrPattern("/active") == true) {
     int voice = msg.get(0).intValue();
@@ -82,27 +83,31 @@ void oscEvent(OscMessage msg) {
     int nodeID = msg.get(0).intValue();
     float value = msg.get(1).floatValue();
     nodes[nodeID].setBrightness(value);
-    println(nodeID, value);
   }
 }
-
 
 void draw() {
   noStroke();
   strokeWeight(2);
-  fill(360, 360, 0, 55);
+  fill(360, 360, 0, 180);
   rect(0, 0, width, height);
 
-  for (int i = 0; i < nodes.length; i++) {
-    nodes[i].update(100);
-  }
+  translate(width/2.0, height/2.0);
+  scale(1.5);
+  translate(-width/2.0, -height/2.0);
   
   for (int i = 0; i < 3; i++) {
-    stroke(330, 360, 360);
-    ellipse(posX[i] * height + offset, posY[i] * height, 10, 10);
     if (trisetActive[i]) {
       triset[i].update(posX[i] * height + offset, posY[i] * height);
     }
   }
- 
+   
+  for (int i = 0; i < nodes.length; i++) {
+    nodes[i].update(90);
+  }
+   
+  for (int i = 0; i < 3; i++) {
+    stroke(330, 360, triset[i].gain());
+    ellipse(posX[i] * height + offset, posY[i] * height, 2.5, 2.5);
+  }
 }

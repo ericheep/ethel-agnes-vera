@@ -187,7 +187,7 @@ fun void polyphonicCircling(dur l, int n) {
 
 (firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
 
-// 30::second => now;
+30::second => now;
 <<< " - Start - ", "" >>>;
 
 spork ~ nodeChanges(transitionTime/2.0, transitionTime/2.0);
