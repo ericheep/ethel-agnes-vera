@@ -105,8 +105,8 @@ fun void switchNode(int idx, int nodeID, dur len) {
         i * inverseIterations => scalar;
 
         for (0 => int j; j < 3; j++) {
-            m[i].nodeValue(prevID) * (1.0 - scalar) => prevValue;
-            m[i].nodeValue(nodeID) * scalar => currValue;
+            m[j].nodeValue(prevID) * (1.0 - scalar) => prevValue;
+            m[j].nodeValue(nodeID) * scalar => currValue;
         }
 
         prevValue + currValue => spkr[idx].gain;
