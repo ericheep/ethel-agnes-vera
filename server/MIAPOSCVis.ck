@@ -19,25 +19,36 @@ public class MIAPOSCVis {
         }
     }
 
-
     public void addAllNodes(MIAP m) {
-        for (0 => int i; i < m.numNodes(); i++) {
-            out.start("/coord");
-            out.add(i);
-            out.add(m.nodeX(i));
-            out.add(m.nodeY(i));
-            out.send();
+        while (true) {
+            3::second => now;
+
+            for (0 => int i; i < m.numNodes(); i++) {
+                out.start("/coord");
+                out.add(i);
+                out.add(m.nodeX(i));
+                out.add(m.nodeY(i));
+                out.send();
+            }
         }
     }
 
-    public void updateNonZeroNodes(MIAP m) {
-        for (0 => int i; i < m.numNodes(); i++) {
-            if (m.nodeValue(i) > 0) {
-                out.start("/gain");
-                out.add(i);
-                out.add(m.nodeValue(i));
-                out.send();
-            }
+    public void nodeActive(int idx, float v) {
+        out.start("/nodeActive");
+        out.add(idx);
+        out.add(v);
+        out.send();
+    }
+
+    public void updateNodeValues(MIAP m1, MIAP m2, MIAP m3) {
+        float value;
+        for (0 => int i; i < m1.numNodes(); i++) {
+            m1.nodeValue(i) + m2.nodeValue(i) + m3.nodeValue(i) => value;
+
+            out.start("/gain");
+            out.add(i);
+            out.add(value);
+            out.send();
         }
     }
 
@@ -73,8 +84,35 @@ public class MIAPOSCVis {
         }
     }
 
+    public void switchNode(int prevNodeID, int nodeID, dur len) {
+        1::second/30.0 => dur iterationTime;
+        (len/iterationTime)$int => int iterations;
+
+        1.0/iterations => float inverseIterations;
+
+        0.0 => float prevValue;
+        0.0 => float currValue;
+        0.0 => float scalar;
+
+        for (0 => int i; i < iterations; i++) {
+            i * inverseIterations => scalar;
+
+            (1.0 - scalar) => prevValue;
+            scalar => currValue;
+
+            nodeActive(prevNodeID, prevValue);
+            nodeActive(nodeID, currValue);
+
+            iterationTime => now;
+        }
+    }
+
     public void oscSend(MIAP m1, MIAP m2, MIAP m3) {
-        addAllNodes(m1);
+        for (0 => int i; i < m1.numNodes(); i++) {
+            nodeActive(i, 0.0);
+        }
+
+        spork ~ addAllNodes(m1);
 
         spork ~ updatePos(0, m1);
         spork ~ updatePos(1, m2);
@@ -83,15 +121,11 @@ public class MIAPOSCVis {
         while (true) {
             updateMIAP(m1, 0);
             samp => now;
-            updateNonZeroNodes(m1);
-            samp => now;
             updateMIAP(m2, 1);
-            samp => now;
-            updateNonZeroNodes(m2);
             samp => now;
             updateMIAP(m3, 2);
             samp => now;
-            updateNonZeroNodes(m3);
+            updateNodeValues(m1, m2, m3);
             second/60.0 => now;
         }
     }

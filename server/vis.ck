@@ -35,7 +35,7 @@ t.setCenter(X_CENTER, Y_CENTER);
 OscIn in;
 OscMsg msg;
 
-12345 => in.port;
+12500 => in.port;
 in.listenAll();
 
 // osc event loop
@@ -47,13 +47,15 @@ while (true) {
             msg.getInt(1) => int nodeID;
 
             nodeID => node[spkr];
+            v.nodeActive(nodeID, 1.0);
         }
         if (msg.address == "/switchNode") {
             msg.getInt(0) => int spkr;
             msg.getInt(1) => int nodeID;
             msg.getFloat(2) => float transitionSeconds;
 
-            // spork ~ switchNode(spkr, nodeID, transitionSeconds);
+            spork ~ v.switchNode(node[spkr], nodeID, transitionSeconds::second);
+            nodeID => node[spkr];
         }
         if (msg.address == "/traverse") {
             msg.getInt(0) => int idx;

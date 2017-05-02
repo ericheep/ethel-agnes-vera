@@ -8,7 +8,6 @@ NodeConfigurations nodeConfig;
 2.0 * pi => float TAU;
 
 OscOut out[NUM_SENDERS];
-0.1::second => now;
 
 1 => int VIS_ONLY;
 
@@ -17,7 +16,7 @@ OscOut out[NUM_SENDERS];
 
 // init
 if (VIS_ONLY) {
-    out[3].dest("localhost", 12345);
+    out[3].dest("localhost", 12500);
 } else {
     for (0 => int i; i < NUM_SENDERS; i++) {
         out[i].dest(hosts[i], 12345);
@@ -112,15 +111,21 @@ fun void nodeChanges(dur transition, dur rest) {
     0 => int spkr;
     0 => int change;
 
+    [17, 23, 25, 18, 31, 32] @=> int initialConfig[];
+    for (0 => int i; i < 6; i++) {
+        setNode(i, initialConfig[i]);
+    }
+
     while (true) {
         rest => now;
 
         nodeConfig.getSpeaker(change) => spkr;
         nodeConfig.getNodeID(change) => nodeID;
         switchNode(spkr, nodeID, transition);
+
         transition => now;
 
-        (change + 1) % 6 => spkr;
+        change++;
     }
 }
 
@@ -136,7 +141,7 @@ fun void monophonicCircling(dur l, int n) {
     l * 0.25 => dur quarter;
     l * 0.50 => dur half;
 
-    for (0 => int i; i < n; i++) {
+    for (n - 1 => int i; i >= 0; i--) {
         exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
@@ -150,7 +155,7 @@ fun void monophonicCircling(dur l, int n) {
             i % 3 => mod;
         }
 
-        triggerVoice(mod, iterationLength, angle + mod * 1.0/3.0 * TAU);
+        triggerVoice(mod, iterationLength, angle + mod * 1.0/3.0 * TAU + 1.0/3.0 * TAU);
         iterationLength => now;
     }
 }
@@ -160,8 +165,12 @@ fun void polyphonicCircling(dur l, int n) {
 
     0::samp => dur iterationLength;
     0.0 => float angle;
+    1.0/n => float s;
+    0.0 => float curve;
 
+    // for (0 => int i; i < n; i++) {
     for (n - 1 => int i; i >= 0; i--) {
+        s * i => curve;
         exponentialInterpolation(i, n, l) => iterationLength;
         angleRotation(i, n, 3) => angle;
 
@@ -173,16 +182,18 @@ fun void polyphonicCircling(dur l, int n) {
 }
 
 // ~ score
-
-8::minute => dur firstSection;
-8::minute => dur secondSection;
+7::minute => dur firstSection;
+7::minute => dur secondSection;
 
 (firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
 
-spork ~ nodeChanges(30::second, 30::second);
+// 30::second => now;
+<<< " - Start - ", "" >>>;
+
+spork ~ nodeChanges(transitionTime/2.0, transitionTime/2.0);
 
 // first section
-monophonicCircling(firstSection, 50);
+monophonicCircling(firstSection, 300);
 
 // second section
 polyphonicCircling(secondSection, 20);
