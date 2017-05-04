@@ -22,7 +22,7 @@ void setup() {
   fullScreen();
   colorMode(HSB, 360); 
   noCursor();
-  offset = (width - height) * 0.5 - ((height/7.5) * 0.5);
+  offset = (width - height) * 0.5 - ((height/7.5) * 0.25);
   
   for (int i = 0; i < voices; i++) {
     trisetActive[i] = false;
