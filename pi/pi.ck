@@ -8,7 +8,7 @@ NUM_VOICES * 2 => int NUM_NODES;
 NUM_VOICES * 2 => int NUM_SPKRS;
 
 MIAP m[NUM_VOICES];
-
+int whichPi;
 int switching[NUM_NODES];
 
 // stores the current node configuration which
@@ -58,8 +58,8 @@ OscMsg msg;
 in.listenAll();
 SndBufStretch voice[NUM_VOICES];
 
-Gain node[NUM_NODES];
-Gain gate[NUM_NODES];
+// number of voices, left and right out
+Gain node[NUM_VOICES][2];
 
 ["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
 
@@ -67,22 +67,13 @@ for (0 => int i; i < NUM_VOICES; i++) {
     voice[i].read(voicePath[i]);
     voice[i].pos(voice[i].samples());
     voice[i].gain(1.0);
-    for (0 => int j; j > NUM_NODES; j++) {
-        voice[i] => node[j];
-    }
-}
 
-for (0 => int i; i < NUM_NODES; i++) {
-    node[i] => gate[i];
-    gate[i].gain(0.0);
-}
+    node[i][0].gain(0.0);
+    node[i][1].gain(0.0);
 
-gate[0] => dac.left;
-gate[1] => dac.right;
-gate[2] => dac.left;
-gate[3] => dac.right;
-gate[4] => dac.left;
-gate[5] => dac.right;
+    voice[i] => node[i][0] => dac.left;
+    voice[i] => node[i][1] => dac.right;
+}
 
 // to ensure we don't overload the speakers
 dac.gain(0.7);
@@ -102,6 +93,9 @@ fun void switchNode(int idx, int nodeID, dur len) {
 
     1 => switching[idx];
 
+    idx / 2 => int spkr;
+    idx % 2 => int chan;
+
     for (0 => int i; i < iterations; i++) {
         i * inverseIterations => scalar;
 
@@ -110,7 +104,7 @@ fun void switchNode(int idx, int nodeID, dur len) {
             m[j].nodeValue(nodeID) * scalar => currValue;
         }
 
-        prevValue + currValue => node[idx].gain;
+        prevValue + currValue => node[spkr][chan].gain;
         iterationTime => now;
     }
 
@@ -123,10 +117,9 @@ fun void updateNodeValues() {
     // we only want to update the gain if that node is NOT switching
     while(true) {
         for(0 => int i; i < NUM_VOICES; i++) {
-            for(0 => int j; j < NUM_NODES; j++) {
-                if(!switching[i]) {
-                    m[i].nodeValue(nodeConfig[j]) => node[j].gain;
-                }
+            if(!switching[i]) {
+                m[i].nodeValue(nodeConfig[whichPi * 2]) => node[i][0].gain;
+                m[i].nodeValue(nodeConfig[whichPi * 2 + 1]) => node[i][1].gain;
             }
         }
         1::ms => now;
@@ -140,13 +133,11 @@ while (true) {
     in => now;
     while (in.recv(msg)) {
         if (msg.address == "/pi") {
-            msg.getInt(0) => int whichPi;
+            msg.getInt(0) => whichPi;
 
             if (debugPrint) {
                 <<< "/pi", whichPi, "" >>>;
             }
-            gate[whichPi * 2].gain(1.0);
-            gate[whichPi * 2 + 1].gain(1.0);
         }
         if (msg.address == "/setNode") {
             msg.getInt(0) => int spkrID;
