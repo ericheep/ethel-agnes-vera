@@ -13,7 +13,7 @@ int switching[NUM_NODES];
 
 // stores the current node configuration which
 // relates to the pi's placement in the grid
-int node[NUM_NODES];
+int nodeConfig[NUM_NODES];
 
 // turn off for speed
 true => int debugPrint;
@@ -58,7 +58,7 @@ OscMsg msg;
 in.listenAll();
 SndBufStretch voice[NUM_VOICES];
 
-Gain spkr[NUM_NODES];
+Gain node[NUM_NODES];
 
 ["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
 
@@ -67,7 +67,7 @@ for (0 => int i; i < NUM_VOICES; i++) {
     voice[i].pos(voice[i].samples());
     voice[i].gain(1.0);
     for (0 => int j; j > NUM_NODES; j++) {
-        voice[i] => spkr[j];
+        voice[i] => node[j];
     }
 }
 
@@ -81,7 +81,7 @@ fun void switchNode(int idx, int nodeID, dur len) {
 
     1.0/iterations => float inverseIterations;
 
-    node[idx] => int prevID;
+    nodeConfig[idx] => int prevID;
 
     0.0 => float prevValue;
     0.0 => float currValue;
@@ -97,11 +97,11 @@ fun void switchNode(int idx, int nodeID, dur len) {
             m[j].nodeValue(nodeID) * scalar => currValue;
         }
 
-        prevValue + currValue => spkr[idx].gain;
+        prevValue + currValue => node[idx].gain;
         iterationTime => now;
     }
 
-    nodeID => node[idx];
+    nodeID => nodeConfig[idx];
     0 => switching[idx];
 }
 
@@ -110,9 +110,9 @@ fun void updateNodeValues() {
     // we only want to update the gain if that node is NOT switching
     while(true) {
         for(0 => int i; i < NUM_VOICES; i++) {
-            for(0 => int j; j < 2; j++) {
-                if(!switching[i * 2 + j]) {
-                    m[i].nodeValue(node[i * 2 + j]) => spkr[i * 2 + j].gain;
+            for(0 => int j; j < NUM_NODES; j++) {
+                if(!switching[i]) {
+                    m[i].nodeValue(nodeConfig[j]) => node[j].gain;
                 }
             }
         }
@@ -132,22 +132,21 @@ while (true) {
             if (debugPrint) {
                 <<< "/pi", whichPi, "" >>>;
             }
-
-            spkr[whichPi * 2] => dac.left;
-            spkr[whichPi * 2 + 1] => dac.right;
+            node[whichPi * 2] => dac.left;
+            node[whichPi * 2 + 1] => dac.right;
         }
         if (msg.address == "/setNode") {
-            msg.getInt(0) => int spkr;
+            msg.getInt(0) => int spkrID;
             msg.getInt(1) => int nodeID;
 
-            nodeID => node[spkr];
+            nodeID => nodeConfig[spkrID];
         }
         if (msg.address == "/switchNode") {
-            msg.getInt(0) => int spkr;
+            msg.getInt(0) => int spkrID;
             msg.getInt(1) => int nodeID;
             msg.getFloat(2) => float transitionSeconds;
 
-            spork ~ switchNode(spkr, nodeID, transitionSeconds::second);
+            spork ~ switchNode(spkrID, nodeID, transitionSeconds::second);
         }
         if (msg.address == "/t") {
             msg.getInt(0) => int voiceID;
@@ -158,7 +157,7 @@ while (true) {
             spork ~ voice[voiceID].stretch(traverseSeconds::second);
 
             if (debugPrint) {
-                <<< "/t", "v:", voiceID, "n: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
+                <<< "/t", "v:", voiceID, "n: [", nodeConfig[0], nodeConfig[1], nodeConfig[2], nodeConfig[3], nodeConfig[4], nodeConfig[5], "]", "" >>>;
             }
         }
     }
