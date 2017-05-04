@@ -74,7 +74,7 @@ for (0 => int i; i < NUM_VOICES; i++) {
 
 for (0 => int i; i < NUM_NODES; i++) {
     node[i] => gate[i];
-    gate.gain(0.0);
+    gate[i].gain(0.0);
 }
 
 gate[0] => dac.left;
