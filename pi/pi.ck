@@ -126,7 +126,6 @@ fun void updateNodeValues() {
             for(0 => int j; j < NUM_NODES; j++) {
                 if(!switching[i]) {
                     m[i].nodeValue(nodeConfig[j]) => node[j].gain;
-                    <<< m[i].nodeValue(nodeConfig[j]) => node[j].gain >>>;
                 }
             }
         }
