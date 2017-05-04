@@ -9,7 +9,6 @@ NUM_VOICES * 2 => int NUM_SPKRS;
 
 MIAP m[NUM_VOICES];
 int whichPi;
-int switching[NUM_NODES];
 
 // stores the current node configuration which
 // relates to the pi's placement in the grid
@@ -60,6 +59,7 @@ SndBufStretch voice[NUM_VOICES];
 
 // number of voices, left and right out
 Gain node[NUM_VOICES][2];
+int switching[NUM_VOICES][2];
 
 ["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
 
@@ -91,10 +91,10 @@ fun void switchNode(int idx, int nodeID, dur len) {
     0.0 => float currValue;
     0.0 => float scalar;
 
-    1 => switching[idx];
-
     idx / 2 => int spkr;
     idx % 2 => int chan;
+
+    1 => switching[spkr][chan];
 
     for (0 => int i; i < iterations; i++) {
         i * inverseIterations => scalar;
@@ -109,7 +109,7 @@ fun void switchNode(int idx, int nodeID, dur len) {
     }
 
     nodeID => nodeConfig[idx];
-    0 => switching[idx];
+    0 => switching[spkr][chan];
 }
 
 
@@ -117,8 +117,10 @@ fun void updateNodeValues() {
     // we only want to update the gain if that node is NOT switching
     while(true) {
         for(0 => int i; i < NUM_VOICES; i++) {
-            if(!switching[i]) {
+            if(!switching[i][0]) {
                 m[i].nodeValue(nodeConfig[whichPi * 2]) => node[i][0].gain;
+            }
+            if(!switching[i][1]) {
                 m[i].nodeValue(nodeConfig[whichPi * 2 + 1]) => node[i][1].gain;
             }
         }
