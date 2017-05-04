@@ -7,4 +7,5 @@ Machine.add("../Traverse.ck");
 Machine.add("vis.ck");
 
 Machine.add("NodeConfigurations.ck");
-Machine.add("score.ck");
+//Machine.add("score.ck");
+Machine.add("installation.ck");

@@ -1,6 +1,6 @@
-// score.ck
+// installation.ck
 // Eric Heep
-// May 1st, 2017
+// May 4th, 2017
 
 NodeConfigurations nodeConfig;
 
@@ -107,98 +107,94 @@ fun float angleRotation(int i, int n, int r) {
 }
 
 
+[16, 23, 25, 18, 31, 32] @=> int initialConfig[];
+
 // score functions
-fun void nodeChanges(dur transition, dur rest) {
+fun void nodeChanges(dur transition, int changes[][]) {
     0 => int nodeID;
     0 => int spkr;
     0 => int change;
 
-    while (true) {
-        rest => now;
-
-        nodeConfig.getSpeaker(change) => spkr;
-        nodeConfig.getNodeID(change) => nodeID;
-        switchNode(spkr, nodeID, transition);
-
+    for (0 => int i; i < changes.size(); i++) {
         transition => now;
-
-        change++;
+        switchNode(changes[i][0], changes[i][1], transition);
+        transition => now;
+    }
+    for (0 => int i; i < 6; i++) {
+        transition => now;
+        switchNode(i, initialConfig[i], transition);
+        transition => now;
     }
 }
 
 
-fun void monophonicCircling(dur l, int n) {
+fun void circling(int v, dur l, int n, int dir, dur offset) {
     now => time start;
 
     0::samp => dur iterationLength;
-    0::samp => dur currentTime;
     0.0 => float angle;
     0 => int mod;
 
-    l * 0.25 => dur quarter;
-    l * 0.50 => dur half;
+    if (dir == 0) {
+        for (n - 1 => int i; i >= 0; i--) {
+            exponentialInterpolation(i, n, l) => iterationLength;
+            angleRotation(i, n, 3) => angle;
 
-    for (n - 1 => int i; i >= 0; i--) {
-        exponentialInterpolation(i, n, l) => iterationLength;
-        angleRotation(i, n, 3) => angle;
-
-        now - start => currentTime;
-
-        if (currentTime < quarter) {
-            0 => mod;
-        } else if (currentTime < half) {
-            i % 2 => mod;
-        } else {
-            i % 3 => mod;
+            triggerVoice(v, iterationLength + offset, angle + v/3.0 * TAU % TAU);
+            iterationLength + offset => now;
         }
+    } else if (dir == 1) {
+        for (0 => int i; i < n; i++) {
+            exponentialInterpolation(i, n, l) => iterationLength;
+            angleRotation(i, n, 3) => angle;
 
-        triggerVoice(mod, iterationLength, angle + mod * 1.0/3.0 * TAU + 1.0/3.0 * TAU);
-        iterationLength => now;
-    }
-}
-
-
-fun void polyphonicCircling(dur l, int n) {
-
-    0::samp => dur iterationLength;
-    0.0 => float angle;
-    1.0/n => float s;
-    0.0 => float curve;
-
-    // for (0 => int i; i < n; i++) {
-    for (n - 1 => int i; i >= 0; i--) {
-        s * i => curve;
-        exponentialInterpolation(i, n, l) => iterationLength;
-        angleRotation(i, n, 3) => angle;
-
-        triggerVoice(0, iterationLength, angle);
-        triggerVoice(1, iterationLength, (angle + (1.0/3.0) * TAU) % TAU);
-        triggerVoice(2, iterationLength, (angle + (2.0/3.0) * TAU) % TAU);
-        iterationLength => now;
+            triggerVoice(v, iterationLength + offset, angle + v/3.0 * TAU % TAU);
+            iterationLength + offset => now;
+        }
     }
 }
 
 // ~ score
-7::minute => dur firstSection;
-7::minute => dur secondSection;
+5::minute => dur section;
+1::second => dur offset;
+30::second => dur nodeSwitch;
 
-(firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
+200 => int loops;
 
-10::second => now;
+5::second => now;
 
-[17, 23, 25, 18, 31, 32] @=> int initialConfig[];
 for (0 => int i; i < 6; i++) {
     setNode(i, initialConfig[i]);
 }
 
-1::second => now;
-
 <<< " - Start - ", "" >>>;
 
-spork ~ nodeChanges(transitionTime/2.0, transitionTime/2.0);
+[[0, 17], [0, 16], [3, 17], [5, 33], [4, 32],
+ [1, 22], [2, 26], [3, 25], [0, 17], [4, 23], [5, 32],
+ [3, 11], [4, 37],
+ [0,  9], [5, 39]] @=> int changes[][];
 
-// first section
-monophonicCircling(firstSection, 300);
+fun void nodesChanging() {
+    while (true) {
+        nodeChanges(nodeSwitch, changes);
+    }
+}
 
-// second section
-polyphonicCircling(secondSection, 20);
+spork ~ nodesChanging();
+
+fun void moveVoice(int v) {
+    while (true) {
+        circling(v, Math.random2f(0.8, 1.2) * section, loops, 0, offset);
+        circling(v, Math.random2f(0.8, 1.2) * section, loops, 1, offset);
+    }
+}
+
+spork ~ moveVoice(0);
+second => now;
+spork ~ moveVoice(1);
+second => now;
+spork ~ moveVoice(2);
+
+while (true) {
+    second => now;
+}
