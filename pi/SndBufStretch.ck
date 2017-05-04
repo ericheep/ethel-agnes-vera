@@ -13,12 +13,14 @@ public class SndBufStretch extends Chubgraph {
 
     SndBuf snd => ADSR env => outlet;
 
-    32              => int m_grains;
-    1.0/m_grains    => float m_inverseGrains;
+    0 => int m_grains;
+    0 => float m_inverseGrains;
+    0 => float m_sampleIncrement;
 
-    0   => int m_samples;
-    0.0 => float m_sampleIncrement;
-    0   => int m_pos;
+    0 => int m_samples;
+    0 => int m_pos;
+
+    grains(32);
 
     0::samp => dur m_grainLength;
     0::samp => dur m_halfGrainLength;
