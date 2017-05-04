@@ -59,6 +59,7 @@ in.listenAll();
 SndBufStretch voice[NUM_VOICES];
 
 Gain node[NUM_NODES];
+Gain gate[NUM_NODES];
 
 ["../wavs/ethel.wav","../wavs/agnes.wav","../wavs/vera.wav"] @=> string voicePath[];
 
@@ -70,6 +71,18 @@ for (0 => int i; i < NUM_VOICES; i++) {
         voice[i] => node[j];
     }
 }
+
+for (0 => int i; i < NUM_NODES; i++) {
+    node[i] => gate[i];
+    gate.gain(0.0);
+}
+
+gate[0] => dac.left;
+gate[1] => dac.right;
+gate[2] => dac.left;
+gate[3] => dac.right;
+gate[4] => dac.left;
+gate[5] => dac.right;
 
 // to ensure we don't overload the speakers
 dac.gain(0.7);
@@ -133,8 +146,8 @@ while (true) {
             if (debugPrint) {
                 <<< "/pi", whichPi, "" >>>;
             }
-            node[whichPi * 2] => dac.left;
-            node[whichPi * 2 + 1] => dac.right;
+            gate[whichPi * 2].gain(1.0);
+            gate[whichPi * 2 + 1].gain(1.0);
         }
         if (msg.address == "/setNode") {
             msg.getInt(0) => int spkrID;
