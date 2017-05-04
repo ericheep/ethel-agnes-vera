@@ -77,7 +77,7 @@ for (0 => int i; i < NUM_VOICES; i++) {
 }
 
 // to ensure we don't overload the speakers
-dac.gain(0.7);
+dac.gain(0.1);
 
 
 fun void switchNode(int idx, int nodeID, dur len) {
