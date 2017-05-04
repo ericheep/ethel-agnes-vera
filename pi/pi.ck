@@ -66,6 +66,7 @@ int switching[NUM_VOICES][2];
 for (0 => int i; i < NUM_VOICES; i++) {
     voice[i].read(voicePath[i]);
     voice[i].pos(voice[i].samples());
+    voice[i].grains(64);
     voice[i].gain(1.0);
 
     node[i][0].gain(0.0);
