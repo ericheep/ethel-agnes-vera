@@ -9,12 +9,7 @@ NUM_VOICES * 2 => int NUM_SPKRS;
 
 MIAP m[NUM_VOICES];
 
-int voiceId[NUM_VOICES];
-int voiceRunning[NUM_VOICES];
 int switching[NUM_NODES];
-
-// very important variable
-0 => int whichPi;
 
 // stores the current node configuration which
 // relates to the pi's placement in the grid
@@ -71,19 +66,14 @@ for (0 => int i; i < NUM_VOICES; i++) {
     voice[i].read(voicePath[i]);
     voice[i].pos(voice[i].samples());
     voice[i].gain(1.0);
+    for (0 => int j; j > NUM_NODES; j++) {
+        voice[i] => spkr[j];
+    }
 }
 
-voice[0] => spkr[0] => dac.left;
-voice[0] => spkr[1] => dac.right;
-
-voice[1] => spkr[2] => dac.left;
-voice[1] => spkr[3] => dac.right;
-
-voice[2] => spkr[4] => dac.left;
-voice[2] => spkr[5] => dac.right;
-
 // to ensure we don't overload the speakers
-dac.gain(0.8);
+dac.gain(0.4);
+
 
 fun void switchNode(int idx, int nodeID, dur len) {
     1::ms => dur iterationTime;
@@ -137,11 +127,14 @@ while (true) {
     in => now;
     while (in.recv(msg)) {
         if (msg.address == "/pi") {
-            msg.getInt(0) => whichPi;
+            msg.getInt(0) => int whichPi;
 
             if (debugPrint) {
                 <<< "/pi", whichPi, "" >>>;
             }
+
+            spkr[whichPi * 2] => dac.left;
+            spkr[whichPi * 2 + 1] => dac.right;
         }
         if (msg.address == "/setNode") {
             msg.getInt(0) => int spkr;
@@ -157,20 +150,15 @@ while (true) {
             spork ~ switchNode(spkr, nodeID, transitionSeconds::second);
         }
         if (msg.address == "/t") {
-            msg.getInt(0) => int idx;
+            msg.getInt(0) => int voiceID;
             msg.getFloat(1) => float traverseSeconds;
             msg.getFloat(2) => float angle;
 
-            // just in case
-            if (voiceRunning[idx]) {
-                Machine.remove(voiceId[idx]);
-            }
-
-            spork ~ t.traverseVoice(m[idx], idx, traverseSeconds::second, angle);
-            spork ~ voice[idx].stretch(traverseSeconds::second);
+            spork ~ t.traverseVoice(m[voiceID], voiceID, traverseSeconds::second, angle);
+            spork ~ voice[voiceID].stretch(traverseSeconds::second);
 
             if (debugPrint) {
-                <<< "/t", "v:", idx, "n: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
+                <<< "/t", "v:", voiceID, "n: [", node[0], node[1], node[2], node[3], node[4], node[5], "]", "" >>>;
             }
         }
     }

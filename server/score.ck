@@ -28,7 +28,7 @@ if (VIS_ONLY) {
 if (!VIS_ONLY) {
     for (0 => int i; i < NUM_PIS; i++) {
         out[i].start("/pi");
-        out[i].add(i);
+        out[i].add(0);
         out[i].send();
     }
 }
@@ -184,14 +184,14 @@ fun void polyphonicCircling(dur l, int n) {
 
 (firstSection + secondSection)/nodeConfig.size() => dur transitionTime;
 
-25::second => now;
+1::second => now;
 
 [17, 23, 25, 18, 31, 32] @=> int initialConfig[];
 for (0 => int i; i < 6; i++) {
     setNode(i, initialConfig[i]);
 }
 
-5::second => now;
+1::second => now;
 
 <<< " - Start - ", "" >>>;
 
